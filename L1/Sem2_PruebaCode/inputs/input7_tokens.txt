@@ -1,0 +1,26 @@
+Scanner
+
+TOKEN(MAX, "max")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x1")
+TOKEN(COMMA, ",")
+TOKEN(ID, "x2")
+TOKEN(COMMA, ",")
+TOKEN(ID, "x3")
+TOKEN(RPAREN, ")")
+TOKEN(PLUS, "+")
+TOKEN(MIN, "min")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x4")
+TOKEN(COMMA, ",")
+TOKEN(ID, "x5")
+TOKEN(RPAREN, ")")
+TOKEN(MUL, "*")
+TOKEN(ABS, "abs")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x6")
+TOKEN(RPAREN, ")")
+TOKEN(END)
+
+Scanner exitoso
+

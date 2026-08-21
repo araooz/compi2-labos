@@ -18,7 +18,12 @@ public:
         LPAREN,  // (
         RPAREN,  // )
         SQRT,    // sqrt
+        ABS,     // abs
+        MIN,     // minimo
+        MAX,     // maximo
+        COMMA,   // coma
         NUM,     // Número
+        FLOAT,   // float
         ERR,     // Error
         ID,      // ID
         END      // Fin de entrada

@@ -1,0 +1,19 @@
+Scanner
+
+TOKEN(MAX, "max")
+TOKEN(LPAREN, "(")
+TOKEN(FLOAT, "1.5")
+TOKEN(COMMA, ",")
+TOKEN(FLOAT, "2.75")
+TOKEN(RPAREN, ")")
+TOKEN(PLUS, "+")
+TOKEN(MIN, "min")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "10")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "5")
+TOKEN(RPAREN, ")")
+TOKEN(END)
+
+Scanner exitoso
+
