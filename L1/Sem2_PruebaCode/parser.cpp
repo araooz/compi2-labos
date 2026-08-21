@@ -119,25 +119,23 @@ Exp* Parser::parseF() {
     Exp* e; 
     if (match(Token::NUM)) {
         return new NumberExp(stoi(previous->text));
-    } 
-    else if (match(Token::LPAREN))
-    {
+    } else if (match(Token::LPAREN)) {
         e = parseCE();
         match(Token::RPAREN);
         return e;
-    }
-    else if (match(Token::SQRT))
-    {   
+    } else if(match(Token::ABS)) {
+        match(Token::LPAREN);
+        e = parseCE();
+        match(Token::RPAREN);
+        return new AbsExp(e);
+    } else if (match(Token::SQRT)) {   
         match(Token::LPAREN);
         e = parseCE();
         match(Token::RPAREN);
         return new SqrtExp(e);
-    }
-    else if (match(Token::ID))
-    {   
+    } else if (match(Token::ID)) {   
         return new IdExp(previous->text);
-    }
-    else {
+    } else {
         throw runtime_error("Error sintáctico");
     }
 }

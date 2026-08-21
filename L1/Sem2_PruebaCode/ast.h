@@ -63,7 +63,14 @@ public:
     SqrtExp(Exp* v);
     ~SqrtExp();
     void toDot(std::ostream& out, int& id) const override; 
-}
-;
+};
+
+class AbsExp : public Exp {
+public:
+    Exp* value;
+    AbsExp(Exp* v);
+    ~AbsExp();
+    void toDot(std::ostream& out, int& id) const override; 
+};
 
 #endif // AST_H

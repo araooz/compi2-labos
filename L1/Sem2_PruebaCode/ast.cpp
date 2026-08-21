@@ -45,6 +45,11 @@ SqrtExp::SqrtExp(Exp* v) : value(v) {}
 
 SqrtExp::~SqrtExp() {}
 
+// ------------------ SqrtExp ------------------
+AbsExp::AbsExp(Exp* v) : value(v) {}
+
+AbsExp::~AbsExp() {}
+
 void BinaryExp::toDot(ostream& out, int& id) const {
     int myId = id++;
     out << "  node" << myId << " [label=\""
@@ -78,6 +83,19 @@ void SqrtExp::toDot(ostream& out, int& id) const {
         out << "  node" << myId << " -> node" << childId << ";\n";
     }
 }
+
+void AbsExp::toDot(ostream& out, int& id) const {
+    int myId = id++;
+    out << "  node" << myId << " [label=\"abs\"];\n";
+
+    if (value) {
+        int childId = id;
+        value->toDot(out, id);
+        out << "  node" << myId << " -> node" << childId << ";\n";
+    }
+}
+
+
 
 void IdExp::toDot(ostream& out, int& id) const {
     int myId = id++;
