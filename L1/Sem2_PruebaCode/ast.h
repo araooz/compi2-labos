@@ -47,6 +47,15 @@ public:
     void toDot(std::ostream& out, int& id) const override; 
 };
 
+// Expresión flotante
+class FloatExp : public Exp {
+public:
+    double value;
+    FloatExp(double v);
+    ~FloatExp();
+    void toDot(std::ostream& out, int& id) const override; 
+};
+
 // Expresión numérica
 class IdExp : public Exp {
 public:
@@ -70,6 +79,22 @@ public:
     Exp* value;
     AbsExp(Exp* v);
     ~AbsExp();
+    void toDot(std::ostream& out, int& id) const override; 
+};
+
+class MaxExp : public Exp {
+public:
+    list<Exp*> exp_list;
+    MaxExp(list<Exp*> exp_list);
+    ~MaxExp();
+    void toDot(std::ostream& out, int& id) const override; 
+};
+
+class MinExp : public Exp {
+public:
+    list<Exp*> exp_list;
+    MinExp(list<Exp*> exp_list);
+    ~MinExp();
     void toDot(std::ostream& out, int& id) const override; 
 };
 

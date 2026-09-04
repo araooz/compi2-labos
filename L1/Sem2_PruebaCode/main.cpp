@@ -53,5 +53,6 @@ int main(int argc, const char* argv[]) {
     }
     out << "}\n";
     out.close();
+    delete ast;
     return 0;
 }

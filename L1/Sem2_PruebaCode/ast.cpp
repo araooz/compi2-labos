@@ -35,6 +35,12 @@ NumberExp::NumberExp(int v) : value(v) {}
 NumberExp::~NumberExp() {}
 
 
+// ------------------ FloatExp ------------------
+FloatExp::FloatExp(double v) : value(v) {}
+
+FloatExp::~FloatExp() {}
+
+
 // ------------------idExp ------------------
 IdExp::IdExp(string v) : value(v) {}
 
@@ -43,12 +49,12 @@ IdExp::~IdExp() {}
 // ------------------ SqrtExp ------------------
 SqrtExp::SqrtExp(Exp* v) : value(v) {}
 
-SqrtExp::~SqrtExp() {}
+SqrtExp::~SqrtExp() { delete value; }
 
-// ------------------ SqrtExp ------------------
+// ------------------ AbsExp ------------------
 AbsExp::AbsExp(Exp* v) : value(v) {}
 
-AbsExp::~AbsExp() {}
+AbsExp::~AbsExp() { delete value; }
 
 void BinaryExp::toDot(ostream& out, int& id) const {
     int myId = id++;
@@ -66,9 +72,28 @@ void BinaryExp::toDot(ostream& out, int& id) const {
         out << "  node" << myId << " -> node" << rightId << ";\n";
     }
 }
+// ----------------- MAX y MIN ----------------
+MaxExp::MaxExp(list<Exp*> el) : exp_list(el) {}
+MaxExp::~MaxExp() {
+    for (Exp* exp : exp_list) {
+        delete exp;
+    }
+}
+
+MinExp::MinExp(list<Exp*> el) : exp_list(el) {}
+MinExp::~MinExp() {
+    for (Exp* exp : exp_list) {
+        delete exp;
+    }
+}
 
 
 void NumberExp::toDot(ostream& out, int& id) const {
+    int myId = id++;
+    out << "  node" << myId << " [label=\"" << value << "\"];\n";
+}
+
+void FloatExp::toDot(ostream& out, int& id) const {
     int myId = id++;
     out << "  node" << myId << " [label=\"" << value << "\"];\n";
 }
@@ -95,7 +120,29 @@ void AbsExp::toDot(ostream& out, int& id) const {
     }
 }
 
+void MaxExp::toDot(ostream& out, int& id) const {
+    int myId = id++;
+    out << "  node" << myId << " [label=\"max\"];\n";
+    for (Exp* exp : exp_list) {
+        if (exp) {
+            int childId = id;
+            exp->toDot(out, id);
+            out << "  node" << myId << " -> node" << childId << ";\n";
+        }
+    }
+}
 
+void MinExp::toDot(ostream& out, int& id) const {
+    int myId = id++;
+    out << "  node" << myId << " [label=\"min\"];\n";
+    for (Exp* exp : exp_list) {
+        if (exp) {
+            int childId = id;
+            exp->toDot(out, id);
+            out << "  node" << myId << " -> node" << childId << ";\n";
+        }
+    }
+}
 
 void IdExp::toDot(ostream& out, int& id) const {
     int myId = id++;

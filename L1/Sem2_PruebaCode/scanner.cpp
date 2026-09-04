@@ -10,7 +10,7 @@ using namespace std;
 // Constructor
 // -----------------------------
 Scanner::Scanner(const char* s): input(s), first(0), current(0) { 
-    }
+}
 
 // -----------------------------
 // Función auxiliar
@@ -24,9 +24,8 @@ bool is_white_space(char c) {
 // nextToken: obtiene el siguiente token
 // -----------------------------
 
-
 Token* Scanner::nextToken() {
-    Token* token;
+    Token* token = nullptr;
 
     // Saltar espacios en blanco
     while (current < input.length() && is_white_space(input[current])) 
@@ -37,58 +36,67 @@ Token* Scanner::nextToken() {
         return new Token(Token::END);
 
     char c = input[current];
-
     first = current;
 
-    // Números
-    if (isdigit(c)) {
-        bool is_float = 0;
-        current++;
-        while (current < input.length() && (isdigit(input[current]) ) || (input[current] == '.') ){
-            if (input[current] == '.') { is_float = true; }
+    // Números (enteros y flotantes)
+    if (isdigit(static_cast<unsigned char>(c))) {
+        while (current < static_cast<int>(input.length()) &&
+               isdigit(static_cast<unsigned char>(input[current]))) {
             current++;
         }
-        if (is_float) {
-            token = new Token(Token::FLOAT, input, first, current - first);
-        }else { 
-            token = new Token(Token::NUM, input, first, current - first);
+
+        bool is_float = false;
+        if (current < static_cast<int>(input.length()) && input[current] == '.') {
+            is_float = true;
+            current++;
+
+            // Se exige al menos un dígito después del punto decimal.
+            if (current >= static_cast<int>(input.length()) ||
+                !isdigit(static_cast<unsigned char>(input[current]))) {
+                return new Token(Token::ERR, input, first, current - first);
+            }
+
+            while (current < static_cast<int>(input.length()) &&
+                   isdigit(static_cast<unsigned char>(input[current]))) {
+                current++;
+            }
         }
+
+        return new Token(is_float ? Token::FLOAT : Token::NUM,
+                         input, first, current - first);
     }
-    // ID
+    // ID y Palabras reservadas
     else if (isalpha(c)) {
         current++;
         while (current < input.length() && isalnum(input[current]))
             current++;
         string lexema = input.substr(first, current - first);
-        if (lexema=="sqrt") return new Token(Token::SQRT, input, first, current - first);
-        else if(lexema=="max") return new Token(Token::MAX, input, first, current - first);
-        else if(lexema=="min") return new Token(Token::MIN, input, first, current - first);
-        else if(lexema=="abs") return new Token(Token::ABS, input, first, current - first);
+        if (lexema == "sqrt") return new Token(Token::SQRT, input, first, current - first);
+        else if (lexema == "max") return new Token(Token::MAX, input, first, current - first);
+        else if (lexema == "min") return new Token(Token::MIN, input, first, current - first);
+        else if (lexema == "abs") return new Token(Token::ABS, input, first, current - first);
         else return new Token(Token::ID, input, first, current - first);
     }
     // Operadores
-    else if (strchr("+/-*();=,", c)) {
+    else if (strchr("+/-*(),", c)) {
         switch (c) {
-            case '+': token = new Token(Token::PLUS,  c); break;
+            case '+': token = new Token(Token::PLUS, c); break;
             case '-': token = new Token(Token::MINUS, c); break;
             case '*': 
-            if (input[current+1]=='*')
-            {
-                current++;
-                token = new Token(Token::POW, input, first, current + 1 - first);
-            }
-            else{
-                token = new Token(Token::MUL,   c);
-            }
-            break;
-            case '/': token = new Token(Token::DIV,   c); break;
-            case '(': token = new Token(Token::LPAREN,c); break;
-            case ')': token = new Token(Token::RPAREN,c); break;
-            case ',': token = new Token(Token::COMMA,c); break;
+                if (current + 1 < input.length() && input[current + 1] == '*') {
+                    current++;
+                    token = new Token(Token::POW, input, first, current + 1 - first);
+                } else {
+                    token = new Token(Token::MUL, c);
+                }
+                break;
+            case '/': token = new Token(Token::DIV, c); break;
+            case '(': token = new Token(Token::LPAREN, c); break;
+            case ')': token = new Token(Token::RPAREN, c); break;
+            case ',': token = new Token(Token::COMMA, c); break;
         }
         current++;
     }
-
     // Carácter inválido
     else {
         token = new Token(Token::ERR, c);
@@ -97,9 +105,6 @@ Token* Scanner::nextToken() {
 
     return token;
 }
-
-
-
 
 // -----------------------------
 // Destructor

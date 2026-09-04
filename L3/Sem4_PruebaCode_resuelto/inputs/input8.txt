@@ -1,0 +1,2 @@
+x = sqrt(16);
+print(x, min(x, 100), max(x, 100))

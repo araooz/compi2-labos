@@ -19,6 +19,11 @@ Parser::Parser(Scanner* sc) : scanner(sc) {
     }
 }
 
+Parser::~Parser() {
+    if (previous) delete previous;
+    if (current) delete current;
+}
+
 bool Parser::match(Token::Type ttype) {
     if (check(ttype)) {
         advance();
@@ -28,8 +33,13 @@ bool Parser::match(Token::Type ttype) {
 }
 
 bool Parser::check(Token::Type ttype) {
-    if (isAtEnd()) return false;
     return current->type == ttype;
+}
+
+void Parser::consume(Token::Type ttype) {
+    if (!match(ttype)) {
+        throw runtime_error("Error sintáctico");
+    }
 }
 
 bool Parser::advance() {
@@ -109,7 +119,7 @@ Exp* Parser::parseT() {
     Exp* l = parseF();
     if (match(Token::POW)) {
         BinaryOp op = POW_OP;
-        Exp* r = parseF();
+        Exp* r = parseT();
         l = new BinaryExp(l, r, op);
     }
     return l;
@@ -119,19 +129,49 @@ Exp* Parser::parseF() {
     Exp* e; 
     if (match(Token::NUM)) {
         return new NumberExp(stoi(previous->text));
+    } else if (match(Token::FLOAT)) {
+        return new FloatExp(stod(previous->text));
     } else if (match(Token::LPAREN)) {
         e = parseCE();
-        match(Token::RPAREN);
+        consume(Token::RPAREN);
         return e;
     } else if(match(Token::ABS)) {
-        match(Token::LPAREN);
+        consume(Token::LPAREN);
         e = parseCE();
-        match(Token::RPAREN);
+        consume(Token::RPAREN);
         return new AbsExp(e);
-    } else if (match(Token::SQRT)) {   
-        match(Token::LPAREN);
+    } else if (match(Token::MAX)) {
+        consume(Token::LPAREN);
+        list<Exp*> args;
+
+        args.push_back(parseCE());
+        consume(Token::COMMA);
+        args.push_back(parseCE());
+
+        while (match(Token::COMMA)) {
+            args.push_back(parseCE());
+        }
+
+        consume(Token::RPAREN);
+        return new MaxExp(args);
+    } else if (match(Token::MIN)) {
+        consume(Token::LPAREN);
+        list<Exp*> args;
+
+        args.push_back(parseCE());
+        consume(Token::COMMA);
+        args.push_back(parseCE());
+
+        while (match(Token::COMMA)) {
+            args.push_back(parseCE());
+        }
+
+        consume(Token::RPAREN);
+        return new MinExp(args);
+   } else if (match(Token::SQRT)) {   
+        consume(Token::LPAREN);
         e = parseCE();
-        match(Token::RPAREN);
+        consume(Token::RPAREN);
         return new SqrtExp(e);
     } else if (match(Token::ID)) {   
         return new IdExp(previous->text);

@@ -1,0 +1,14 @@
+=== STDOUT ===
+Parseo exitoso
+Codigo:
+PROGRAMA
+a, b=5, 9
+c=min(a, b) + max(a, b)
+print(a, b, c)
+print(min(a, 0))
+
+Interprete:
+5 9 14
+0
+
+=== STDERR ===

@@ -1,0 +1,12 @@
+=== STDOUT ===
+Parseo exitoso
+Codigo:
+PROGRAMA
+x=4
+y=5
+print(x, y)
+
+Interprete:
+4 5
+
+=== STDERR ===

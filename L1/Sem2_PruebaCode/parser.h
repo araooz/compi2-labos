@@ -10,10 +10,12 @@ private:
     Token *current, *previous; // Punteros al token actual y al anterior
     bool match(Token::Type ttype);   // Verifica si el token actual coincide con un tipo esperado y avanza si es así
     bool check(Token::Type ttype);   // Comprueba si el token actual es de cierto tipo, sin avanzar
+    void consume(Token::Type ttype); // Exige un token; reporta error si no aparece
     bool advance();                  // Avanza al siguiente token
     bool isAtEnd();                  // Comprueba si ya se llegó al final de la entrada
 public:
     Parser(Scanner* scanner);       
+    ~Parser();
     Exp* parseProgram();    // Punto de entrada: analiza un programa completo
     Exp* parseP();          
     Exp* parseCE();                  

@@ -1,0 +1,10 @@
+=== STDOUT ===
+Parseo exitoso
+Codigo:
+PROGRAMA
+print(min(2 + 3, 4 * 2), max(2 + 3, 4 * 2))
+
+Interprete:
+5 8
+
+=== STDERR ===
