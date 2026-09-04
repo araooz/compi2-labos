@@ -1,0 +1,8 @@
+Scanner
+
+TOKEN(ID, "x")
+TOKEN(ERR, ",")
+Caracter invalido
+
+Scanner no exitoso
+

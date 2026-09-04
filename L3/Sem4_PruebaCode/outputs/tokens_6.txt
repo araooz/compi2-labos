@@ -1,0 +1,14 @@
+Scanner
+
+TOKEN(PRINT, "print")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "min")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "2")
+TOKEN(PLUS, "+")
+TOKEN(NUM, "3")
+TOKEN(ERR, ",")
+Caracter invalido
+
+Scanner no exitoso
+

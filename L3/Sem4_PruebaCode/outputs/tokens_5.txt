@@ -1,0 +1,12 @@
+Scanner
+
+TOKEN(ID, "x")
+TOKEN(ASSIGN, "=")
+TOKEN(ID, "min")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "3")
+TOKEN(ERR, ",")
+Caracter invalido
+
+Scanner no exitoso
+
