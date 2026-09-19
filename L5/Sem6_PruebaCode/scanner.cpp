@@ -63,12 +63,20 @@ Token* Scanner::nextToken() {
         else if (lexema=="do") return new Token(Token::DO, input, first, current - first);
         else if (lexema=="while") return new Token(Token::WHILE, input, first, current - first);
         else if (lexema=="endwhile") return new Token(Token::ENDWHILE, input, first, current - first);
+        else if (lexema=="true") return new Token(Token::TRUE, input, first, current - first);
+        else if (lexema=="false") return new Token(Token::FALSE, input, first, current - first);
+        else if (lexema=="and") return new Token(Token::AND, input, first, current - first);
+        else if (lexema=="or") return new Token(Token::OR, input, first, current - first);
+        else if (lexema=="switch") return new Token(Token::SWITCH, input, first, current - first);
+        else if (lexema=="case") return new Token(Token::CASE, input, first, current - first);
+        else if (lexema=="default") return new Token(Token::DEFAULT, input, first, current - first);
+        else if (lexema=="endswitch") return new Token(Token::ENDSWITCH, input, first, current - first);
+        else if (lexema=="break") return new Token(Token::BREAK, input, first, current - first);
         else return new Token(Token::ID, input, first, current - first);
     }
     // Operadores
-    else if (strchr("+/-*()=;", c)) {
+    else if (strchr("+/-*();", c)) {
         switch (c) {
-            case '=': token = new Token(Token::ASSIGN,  c); break;
             case ';': token = new Token(Token::SEMICOLON, c); break;
             case '+': token = new Token(Token::PLUS,  c); break;
             case '-': token = new Token(Token::MINUS, c); break;
@@ -87,6 +95,43 @@ Token* Scanner::nextToken() {
             case ')': token = new Token(Token::RPAREN,c); break;
         }
         current++;
+    }
+    // Operadores con =
+    else if (c == '=') {
+        current++;
+        if (current < input.length() && input[current] == '=') {
+            current++;
+            token = new Token(Token::EQ, input, first, current - first);
+        } else {
+            token = new Token(Token::ASSIGN, '=');
+        }
+    }
+    else if (c == '!') {
+        current++;
+        if (current < input.length() && input[current] == '=') {
+            current++;
+            token = new Token(Token::NE, input, first, current - first);
+        } else {
+            token = new Token(Token::ERR, c);
+        }
+    }
+    else if (c == '<') {
+        current++;
+        if (current < input.length() && input[current] == '=') {
+            current++;
+            token = new Token(Token::LE, input, first, current - first);
+        } else {
+            token = new Token(Token::LT, '<');
+        }
+    }
+    else if (c == '>') {
+        current++;
+        if (current < input.length() && input[current] == '=') {
+            current++;
+            token = new Token(Token::GE, input, first, current - first);
+        } else {
+            token = new Token(Token::GT, '>');
+        }
     }
 
     // Carácter inválido

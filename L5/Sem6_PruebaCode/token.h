@@ -32,6 +32,21 @@ public:
         ASSIGN,   
         PRINT,
         SEMICOLON,
+        TRUE,    
+        FALSE,   
+        AND,     
+        OR,      
+        LT,      
+        GT,      
+        LE,      
+        GE,      
+        EQ,      
+        NE,      
+        SWITCH,
+        CASE,
+        DEFAULT,
+        ENDSWITCH,
+        BREAK,
         END      // Fin de entrada
     };
 

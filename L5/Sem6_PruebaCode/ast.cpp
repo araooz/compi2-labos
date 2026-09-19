@@ -13,6 +13,14 @@ string Exp::binopToChar(BinaryOp op) {
         case MUL_OP:   return "*";
         case DIV_OP:   return "/";
         case POW_OP:   return "**";
+        case LT_OP:    return "<";
+        case GT_OP:    return ">";
+        case LE_OP:    return "<=";
+        case GE_OP:    return ">=";
+        case EQ_OP:    return "==";
+        case NE_OP:    return "!=";
+        case AND_OP:   return "and";
+        case OR_OP:    return "or";
         default:       return "?";
     }
 }
@@ -44,6 +52,11 @@ IdExp::IdExp(string v) : value(v) {}
 
 IdExp::~IdExp() {}
 
+// ------------------ BoolExp ------------------
+BoolExp::BoolExp(bool v) : value(v) {}
+
+BoolExp::~BoolExp() {}
+
 ElifStatement::ElifStatement(Exp* cond, Body* body) : condition(cond), elifbody(body) {}
 
 IfStatement::IfStatement() : condition(nullptr), ifbody(nullptr), elsebody(nullptr) {}
@@ -54,3 +67,9 @@ DoWhileStatement::DoWhileStatement(Body* b, Exp* c) : body(b), condition(c) {}
 
 WhileStatement::WhileStatement() : condition(nullptr), body(nullptr) {}
 WhileStatement::WhileStatement(Exp* c, Body* b) : condition(c), body(b) {}
+
+// ------------------ CaseStatement ------------------
+CaseStatement::CaseStatement(Exp* v, Body* b, bool brk) : value(v), body(b), hasBreak(brk) {}
+
+// ------------------ SwitchStatement ------------------
+SwitchStatement::SwitchStatement() : expr(nullptr), defaultBody(nullptr) {}

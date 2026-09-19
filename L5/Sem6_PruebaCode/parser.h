@@ -17,10 +17,14 @@ public:
     Program* parseProgram();             // Punto de entrada: analiza un programa completo
     Body* parseBody();
     Stm* parseStm();
-    Exp* parseCE();                   // Regla gramatical P
-    Exp* parseE();                   // Regla gramatical E
-    Exp* parseT();                   // Regla gramatical T
-    Exp* parseF();                   // Regla gramatical F
+    Exp* parseCE();                   
+    Exp* parseLOrExp();               
+    Exp* parseLAndExp();              
+    Exp* parseRelExp();               
+    Exp* parseExpr();                 
+    Exp* parseTerm();                 
+    Exp* parsePow();                  
+    Exp* parseF();                    
 };
 
 #endif // PARSER_H      

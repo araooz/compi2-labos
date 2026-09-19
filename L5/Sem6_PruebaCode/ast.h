@@ -16,7 +16,17 @@ enum BinaryOp {
     MINUS_OP, 
     MUL_OP, 
     DIV_OP,
-    POW_OP
+    POW_OP,
+    // Operadores relacionales
+    LT_OP,
+    GT_OP,
+    LE_OP,
+    GE_OP,
+    EQ_OP,
+    NE_OP,
+    // Operadores lógicos
+    AND_OP,
+    OR_OP
 };
 
 // Clase abstracta Exp
@@ -63,6 +73,15 @@ public:
     int accept(Visitor* visitor);
     IdExp(string v);
     ~IdExp();
+};
+
+// Expresión booleana
+class BoolExp : public Exp {
+public:
+    bool value;
+    int accept(Visitor* visitor);
+    BoolExp(bool v);
+    ~BoolExp();
 };
 
 class Stm {
@@ -139,6 +158,35 @@ public:
     ~WhileStatement(){};
 };
 
+// Break statement
+class BreakStatement : public Stm {
+public:
+    int accept(Visitor* visitor);
+    BreakStatement(){};
+    ~BreakStatement(){};
+};
+
+// Case de un switch
+class CaseStatement : public Stm {
+public:
+    Exp* value;
+    Body* body;
+    bool hasBreak;
+    int accept(Visitor* visitor);
+    CaseStatement(Exp* v, Body* b, bool brk);
+    ~CaseStatement(){};
+};
+
+// Switch statement
+class SwitchStatement : public Stm {
+public:
+    Exp* expr;
+    list<CaseStatement*> cases;
+    Body* defaultBody;
+    int accept(Visitor* visitor);
+    SwitchStatement();
+    ~SwitchStatement(){};
+};
 
 class Program {
 public:

@@ -45,6 +45,21 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::DO:        outs << "TOKEN(DO, \""        << tok.text << "\")"; break;
         case Token::WHILE:     outs << "TOKEN(WHILE, \""     << tok.text << "\")"; break;
         case Token::ENDWHILE:  outs << "TOKEN(ENDWHILE, \""  << tok.text << "\")"; break;
+        case Token::TRUE:      outs << "TOKEN(TRUE, \""      << tok.text << "\")"; break;
+        case Token::FALSE:     outs << "TOKEN(FALSE, \""     << tok.text << "\")"; break;
+        case Token::AND:       outs << "TOKEN(AND, \""       << tok.text << "\")"; break;
+        case Token::OR:        outs << "TOKEN(OR, \""        << tok.text << "\")"; break;
+        case Token::LT:        outs << "TOKEN(LT, \""        << tok.text << "\")"; break;
+        case Token::GT:        outs << "TOKEN(GT, \""        << tok.text << "\")"; break;
+        case Token::LE:        outs << "TOKEN(LE, \""        << tok.text << "\")"; break;
+        case Token::GE:        outs << "TOKEN(GE, \""        << tok.text << "\")"; break;
+        case Token::EQ:        outs << "TOKEN(EQ, \""        << tok.text << "\")"; break;
+        case Token::NE:        outs << "TOKEN(NE, \""        << tok.text << "\")"; break;
+        case Token::SWITCH:    outs << "TOKEN(SWITCH, \""    << tok.text << "\")"; break;
+        case Token::CASE:      outs << "TOKEN(CASE, \""      << tok.text << "\")"; break;
+        case Token::DEFAULT:   outs << "TOKEN(DEFAULT, \""   << tok.text << "\")"; break;
+        case Token::ENDSWITCH: outs << "TOKEN(ENDSWITCH, \"" << tok.text << "\")"; break;
+        case Token::BREAK:     outs << "TOKEN(BREAK, \""     << tok.text << "\")"; break;
         case Token::END:    outs << "TOKEN(END)"; break;
     }
     return outs;

@@ -1,12 +1,17 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <stdexcept>
 #include "ast.h"
 #include "visitor.h"
 
 
 using namespace std;
 unordered_map<std::string, int> memoria;
+
+// Excepción interna para señalizar break dentro de switch
+class BreakSignal : public exception {};
+
 ///////////////////////////////////////////////////////////////////////////////////
 int BinaryExp::accept(Visitor* visitor) {
     return visitor->visit(this);
@@ -21,6 +26,10 @@ int SqrtExp::accept(Visitor* visitor) {
 }
 
 int IdExp::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
+int BoolExp::accept(Visitor* visitor) {
     return visitor->visit(this);
 }
 
@@ -56,6 +65,18 @@ int WhileStatement::accept(Visitor* visitor) {
     return visitor->visit(this);
 }
 
+int BreakStatement::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
+int CaseStatement::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
+int SwitchStatement::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +96,11 @@ int PrintVisitor::visit(SqrtExp* exp) {
     cout << "sqrt(";
     exp->value->accept(this);
     cout <<  ")";
+    return 0;
+}
+
+int PrintVisitor::visit(BoolExp* exp) {
+    cout << (exp->value ? "true" : "false");
     return 0;
 }
 
@@ -157,6 +183,37 @@ int PrintVisitor::visit(WhileStatement* p) {
     return 0;
 }
 
+int PrintVisitor::visit(BreakStatement* p) {
+    cout << "break" << endl;
+    return 0;
+}
+
+int PrintVisitor::visit(CaseStatement* p) {
+    cout << "case ";
+    p->value->accept(this);
+    cout << endl;
+    p->body->accept(this);
+    if (p->hasBreak) {
+        cout << "break" << endl;
+    }
+    return 0;
+}
+
+int PrintVisitor::visit(SwitchStatement* p) {
+    cout << "switch ";
+    p->expr->accept(this);
+    cout << endl;
+    for (auto c : p->cases) {
+        c->accept(this);
+    }
+    if (p->defaultBody) {
+        cout << "default" << endl;
+        p->defaultBody->accept(this);
+    }
+    cout << "endswitch" << endl;
+    return 0;
+}
+
 
 
 void PrintVisitor::imprimir(Program* programa){
@@ -195,6 +252,30 @@ int EVALVisitor::visit(BinaryExp* exp) {
         case POW_OP:
             result = pow(v1,v2);
             break;
+        case LT_OP:
+            result = (v1 < v2) ? 1 : 0;
+            break;
+        case GT_OP:
+            result = (v1 > v2) ? 1 : 0;
+            break;
+        case LE_OP:
+            result = (v1 <= v2) ? 1 : 0;
+            break;
+        case GE_OP:
+            result = (v1 >= v2) ? 1 : 0;
+            break;
+        case EQ_OP:
+            result = (v1 == v2) ? 1 : 0;
+            break;
+        case NE_OP:
+            result = (v1 != v2) ? 1 : 0;
+            break;
+        case AND_OP:
+            result = (v1 && v2) ? 1 : 0;
+            break;
+        case OR_OP:
+            result = (v1 || v2) ? 1 : 0;
+            break;
         default:
             cout << "Operador desconocido" << endl;
             result = 0;
@@ -208,6 +289,10 @@ int EVALVisitor::visit(NumberExp* exp) {
 
 int EVALVisitor::visit(SqrtExp* exp) {
     return floor(sqrt( exp->value->accept(this)));
+}
+
+int EVALVisitor::visit(BoolExp* exp) {
+    return exp->value ? 1 : 0;
 }
 
 void EVALVisitor::interprete(Program* programa){
@@ -278,14 +363,61 @@ int EVALVisitor::visit(ElifStatement* p) {
 
 int EVALVisitor::visit(DoWhileStatement* p) {
     do {
-        p->body->accept(this);
+        try {
+            p->body->accept(this);
+        } catch (BreakSignal&) {
+            // break dentro del body de do-while (e.g. dentro de un switch)
+            // no debe romper el do-while, se propaga desde switch
+        }
     } while (p->condition->accept(this));
     return 0;
 }
 
 int EVALVisitor::visit(WhileStatement* p) {
     while (p->condition->accept(this)) {
-        p->body->accept(this);
+        try {
+            p->body->accept(this);
+        } catch (BreakSignal&) {
+            // break dentro del body (e.g. dentro de un switch)
+        }
+    }
+    return 0;
+}
+
+int EVALVisitor::visit(BreakStatement* p) {
+    throw BreakSignal();
+    return 0;
+}
+
+int EVALVisitor::visit(CaseStatement* p) {
+    p->body->accept(this);
+    if (p->hasBreak) {
+        throw BreakSignal();
+    }
+    return 0;
+}
+
+int EVALVisitor::visit(SwitchStatement* p) {
+    int val = p->expr->accept(this);
+    bool matched = false;
+    for (auto c : p->cases) {
+        int caseVal = c->value->accept(this);
+        if (val == caseVal) {
+            matched = true;
+            try {
+                c->accept(this);
+            } catch (BreakSignal&) {
+                return 0;  // break sale del switch
+            }
+            // fall-through: si no hubo break, continuar con siguientes cases
+        }
+    }
+    if (!matched && p->defaultBody) {
+        try {
+            p->defaultBody->accept(this);
+        } catch (BreakSignal&) {
+            return 0;
+        }
     }
     return 0;
 }
