@@ -11,8 +11,10 @@ TOKEN(SEMICOLON, ";")
 TOKEN(PRINT, "print")
 TOKEN(LPAREN, "(")
 TOKEN(ID, "x")
-TOKEN(ERR, ",")
-Caracter invalido
+TOKEN(COMMA, ",")
+TOKEN(ID, "y")
+TOKEN(RPAREN, ")")
+TOKEN(END)
 
-Scanner no exitoso
+Scanner exitoso
 

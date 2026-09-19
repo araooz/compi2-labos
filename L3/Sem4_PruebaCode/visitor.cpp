@@ -1,12 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
 #include "ast.h"
 #include "visitor.h"
 
 
 using namespace std;
-unordered_map<std::string, int> memoria;
 ///////////////////////////////////////////////////////////////////////////////////
 int BinaryExp::accept(Visitor* visitor) {
     return visitor->visit(this);
@@ -17,6 +17,10 @@ int NumberExp::accept(Visitor* visitor) {
 }
 
 int SqrtExp::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
+int FunctionExp::accept(Visitor* visitor) {
     return visitor->visit(this);
 }
 
@@ -58,6 +62,15 @@ int PrintVisitor::visit(SqrtExp* exp) {
     return 0;
 }
 
+int PrintVisitor::visit(FunctionExp* exp) {
+    cout << (exp->op == MIN_OP ? "min(" : "max(");
+    exp->left->accept(this);
+    cout << ", ";
+    exp->right->accept(this);
+    cout << ")";
+    return 0;
+}
+
 int PrintVisitor::visit(Program* p) {
     cout << "PROGRAMA" << endl;
     for (auto i: p->cuerpo)
@@ -70,14 +83,24 @@ int PrintVisitor::visit(Program* p) {
 
 int PrintVisitor::visit(PrintStatement* p) {
     cout << "print(" ;
-    p->valor->accept(this);
+    for (size_t i = 0; i < p->valores.size(); ++i) {
+        if (i > 0) cout << ", ";
+        p->valores[i]->accept(this);
+    }
     cout << ")" << endl;
     return 0;
 }
 
 int PrintVisitor::visit(AssignStatement* p) {
-    cout << p->variable << "=";
-    p->valor->accept(this);
+    for (size_t i = 0; i < p->variables.size(); ++i) {
+        if (i > 0) cout << ", ";
+        cout << p->variables[i];
+    }
+    cout << "=";
+    for (size_t i = 0; i < p->valores.size(); ++i) {
+        if (i > 0) cout << ", ";
+        p->valores[i]->accept(this);
+    }
     cout << endl; 
     return 0;
 }
@@ -141,6 +164,12 @@ int EVALVisitor::visit(SqrtExp* exp) {
     return floor(sqrt( exp->value->accept(this)));
 }
 
+int EVALVisitor::visit(FunctionExp* exp) {
+    int left = exp->left->accept(this);
+    int right = exp->right->accept(this);
+    return exp->op == MIN_OP ? min(left, right) : max(left, right);
+}
+
 void EVALVisitor::interprete(Program* programa){
     if (programa)
     {
@@ -161,12 +190,22 @@ int EVALVisitor::visit(Program* p) {
 }
 
 int EVALVisitor::visit(PrintStatement* p) {
-    cout << p->valor->accept(this) << endl;
+    for (size_t i = 0; i < p->valores.size(); ++i) {
+        if (i > 0) cout << ' ';
+        cout << p->valores[i]->accept(this);
+    }
+    cout << endl;
     return 0;
 }
 
 int EVALVisitor::visit(AssignStatement* p) {
-    memoria[p->variable] = p->valor->accept(this);
+    vector<int> resultados;
+    for (Exp* valor : p->valores) {
+        resultados.push_back(valor->accept(this));
+    }
+    for (size_t i = 0; i < p->variables.size(); ++i) {
+        memoria[p->variables[i]] = resultados[i];
+    }
     return 0;
 }
 

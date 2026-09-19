@@ -1,4 +1,4 @@
 === STDOUT ===
 
 === STDERR ===
-Error al parsear: Error sintáctico 1
+Error al parsear: Error sintáctico

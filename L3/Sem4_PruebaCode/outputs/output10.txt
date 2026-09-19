@@ -1,4 +1,4 @@
 === STDOUT ===
 
 === STDERR ===
-Error al parsear: Error lexico
+Error al parsear: La cantidad de identificadores y expresiones no coincide

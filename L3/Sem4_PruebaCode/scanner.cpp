@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <cctype>
 #include "token.h"
 #include "scanner.h"
 
@@ -41,31 +42,34 @@ Token* Scanner::nextToken() {
     first = current;
 
     // Números
-    if (isdigit(c)) {
+    if (isdigit(static_cast<unsigned char>(c))) {
         current++;
-        while (current < input.length() && isdigit(input[current]))
+        while (current < input.length() && isdigit(static_cast<unsigned char>(input[current])))
             current++;
         token = new Token(Token::NUM, input, first, current - first);
     }
     // ID
-    else if (isalpha(c)) {
+    else if (isalpha(static_cast<unsigned char>(c))) {
         current++;
-        while (current < input.length() && isalnum(input[current]))
+        while (current < input.length() && isalnum(static_cast<unsigned char>(input[current])))
             current++;
         string lexema = input.substr(first, current - first);
         if (lexema=="sqrt") return new Token(Token::SQRT, input, first, current - first);
+        else if (lexema=="min") return new Token(Token::MIN, input, first, current - first);
+        else if (lexema=="max") return new Token(Token::MAX, input, first, current - first);
         else if (lexema=="print") return new Token(Token::PRINT, input, first, current - first);
         else return new Token(Token::ID, input, first, current - first);
     }
     // Operadores
-    else if (strchr("+/-*()=;", c)) {
+    else if (strchr("+/-*()=;,", c)) {
         switch (c) {
             case '=': token = new Token(Token::ASSIGN,  c); break;
             case ';': token = new Token(Token::SEMICOLON, c); break;
+            case ',': token = new Token(Token::COMMA, c); break;
             case '+': token = new Token(Token::PLUS,  c); break;
             case '-': token = new Token(Token::MINUS, c); break;
             case '*': 
-            if (input[current+1]=='*')
+            if (current + 1 < input.length() && input[current + 1] == '*')
             {
                 current++;
                 token = new Token(Token::POW, input, first, current + 1 - first);

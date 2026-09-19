@@ -18,6 +18,8 @@ public:
         LPAREN,  // (
         RPAREN,  // )
         SQRT,    // sqrt
+        MIN,     // min
+        MAX,     // max
         NUM,     // Número
         ERR,     // Error
         ID,      // ID
@@ -26,6 +28,7 @@ public:
         ENDIF,
         ASSIGN,   
         PRINT,
+        COMMA,
         SEMICOLON,
         END      // Fin de entrada
     };

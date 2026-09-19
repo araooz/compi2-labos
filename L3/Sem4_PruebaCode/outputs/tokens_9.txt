@@ -1,8 +1,38 @@
 Scanner
 
 TOKEN(ID, "x")
-TOKEN(ERR, ",")
-Caracter invalido
+TOKEN(COMMA, ",")
+TOKEN(ID, "y")
+TOKEN(COMMA, ",")
+TOKEN(ID, "z")
+TOKEN(ASSIGN, "=")
+TOKEN(NUM, "2")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "3")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "4")
+TOKEN(SEMICOLON, ";")
+TOKEN(PRINT, "print")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x")
+TOKEN(MUL, "*")
+TOKEN(ID, "y")
+TOKEN(PLUS, "+")
+TOKEN(ID, "z")
+TOKEN(COMMA, ",")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x")
+TOKEN(PLUS, "+")
+TOKEN(ID, "y")
+TOKEN(RPAREN, ")")
+TOKEN(MUL, "*")
+TOKEN(ID, "z")
+TOKEN(COMMA, ",")
+TOKEN(ID, "x")
+TOKEN(POW, "**")
+TOKEN(ID, "y")
+TOKEN(RPAREN, ")")
+TOKEN(END)
 
-Scanner no exitoso
+Scanner exitoso
 

@@ -2,14 +2,15 @@
 #define SCANNER_H
 
 #include <string>
+#include <cstddef>
 #include "token.h"
 using namespace std;
 
 class Scanner {
 private:
     string input;
-    int first;
-    int current;
+    size_t first;
+    size_t current;
 
 public:
     // Constructor

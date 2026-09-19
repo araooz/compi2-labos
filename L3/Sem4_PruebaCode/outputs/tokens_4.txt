@@ -1,8 +1,26 @@
 Scanner
 
 TOKEN(ID, "a")
-TOKEN(ERR, ",")
-Caracter invalido
+TOKEN(COMMA, ",")
+TOKEN(ID, "b")
+TOKEN(COMMA, ",")
+TOKEN(ID, "c")
+TOKEN(ASSIGN, "=")
+TOKEN(NUM, "1")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "2")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "3")
+TOKEN(SEMICOLON, ";")
+TOKEN(PRINT, "print")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "a")
+TOKEN(COMMA, ",")
+TOKEN(ID, "b")
+TOKEN(COMMA, ",")
+TOKEN(ID, "c")
+TOKEN(RPAREN, ")")
+TOKEN(END)
 
-Scanner no exitoso
+Scanner exitoso
 

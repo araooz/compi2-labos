@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <list>
 #include <ostream>
+#include <vector>
 
 using namespace std;
 
@@ -17,6 +18,11 @@ enum BinaryOp {
     MUL_OP, 
     DIV_OP,
     POW_OP
+};
+
+enum FunctionOp {
+    MIN_OP,
+    MAX_OP
 };
 
 // Clase abstracta Exp
@@ -57,6 +63,16 @@ public:
     ~SqrtExp();
 };
 
+class FunctionExp : public Exp {
+public:
+    Exp* left;
+    Exp* right;
+    FunctionOp op;
+    int accept(Visitor* visitor);
+    FunctionExp(Exp* l, Exp* r, FunctionOp op);
+    ~FunctionExp();
+};
+
 class IdExp : public Exp {
 public:
     string value;
@@ -73,20 +89,20 @@ public:
 
 class AssignStatement : public Stm{
 public:
-    string variable;
-    Exp* valor;
+    vector<string> variables;
+    vector<Exp*> valores;
     int  accept(Visitor* visitor);
     AssignStatement(){};
-    ~AssignStatement(){};
+    ~AssignStatement();
 }
 ;
 
 class PrintStatement : public Stm{
 public:
-    Exp* valor;
+    vector<Exp*> valores;
     int  accept(Visitor* visitor);
     PrintStatement(){};
-    ~PrintStatement(){};
+    ~PrintStatement();
 }
 ;
 
@@ -95,7 +111,7 @@ class Program {
 public:
     list<Stm*> cuerpo;
     Program(){};
-    ~Program(){};
+    ~Program();
     int accept(Visitor* visitor);   
 }
 ;

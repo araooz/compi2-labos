@@ -1,8 +1,30 @@
 Scanner
 
 TOKEN(ID, "x")
-TOKEN(ERR, ",")
-Caracter invalido
+TOKEN(COMMA, ",")
+TOKEN(ID, "y")
+TOKEN(ASSIGN, "=")
+TOKEN(MIN, "min")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "10")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "20")
+TOKEN(RPAREN, ")")
+TOKEN(COMMA, ",")
+TOKEN(MAX, "max")
+TOKEN(LPAREN, "(")
+TOKEN(NUM, "10")
+TOKEN(COMMA, ",")
+TOKEN(NUM, "20")
+TOKEN(RPAREN, ")")
+TOKEN(SEMICOLON, ";")
+TOKEN(PRINT, "print")
+TOKEN(LPAREN, "(")
+TOKEN(ID, "x")
+TOKEN(PLUS, "+")
+TOKEN(ID, "y")
+TOKEN(RPAREN, ")")
+TOKEN(END)
 
-Scanner no exitoso
+Scanner exitoso
 

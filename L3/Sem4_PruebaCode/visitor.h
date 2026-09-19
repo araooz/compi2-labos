@@ -7,12 +7,14 @@
 class BinaryExp;
 class NumberExp;
 class SqrtExp;
+class FunctionExp;
 
 class Visitor {
 public:
     virtual int visit(BinaryExp* exp) = 0;
     virtual int visit(NumberExp* exp) = 0;
     virtual int visit(SqrtExp* exp) = 0;
+    virtual int visit(FunctionExp* exp) = 0;
     virtual int visit(Program* p) = 0;
     virtual int visit(IdExp* exp) = 0;
     virtual int visit(PrintStatement* stm) = 0;
@@ -25,6 +27,7 @@ public:
     int visit(BinaryExp* exp) override;
     int visit(NumberExp* exp) override;
     int visit(SqrtExp* exp) override;
+    int visit(FunctionExp* exp) override;
     int visit(IdExp* exp) override;
     int visit(Program* p) override;
     int visit(PrintStatement* stm) override; 
@@ -38,6 +41,7 @@ public:
     int visit(BinaryExp* exp) override;
     int visit(NumberExp* exp) override;
     int visit(SqrtExp* exp) override;
+    int visit(FunctionExp* exp) override;
     int visit(IdExp* exp) override;
     int visit(Program* p) override;
     int visit(PrintStatement* stm) override; 
