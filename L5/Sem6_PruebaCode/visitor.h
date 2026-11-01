@@ -20,6 +20,8 @@ class WhileStatement;
 class BreakStatement;
 class CaseStatement;
 class SwitchStatement;
+class IncrementStatement;
+class PlusAssignStatement;
 
 class Visitor {
 public:
@@ -39,6 +41,8 @@ public:
     virtual int visit(BreakStatement* stm) = 0;
     virtual int visit(CaseStatement* stm) = 0;
     virtual int visit(SwitchStatement* stm) = 0;
+    virtual int visit(IncrementStatement* stm) = 0;
+    virtual int visit(PlusAssignStatement* stm) = 0;
 };
 
 class PrintVisitor : public Visitor {
@@ -60,6 +64,8 @@ public:
     int visit(BreakStatement* stm) override;
     int visit(CaseStatement* stm) override;
     int visit(SwitchStatement* stm) override;
+    int visit(IncrementStatement* stm) override;
+    int visit(PlusAssignStatement* stm) override;
     void imprimir(Program* program);
 };
 
@@ -82,6 +88,8 @@ public:
     int visit(BreakStatement* stm) override;
     int visit(CaseStatement* stm) override;
     int visit(SwitchStatement* stm) override;
+    int visit(IncrementStatement* stm) override;
+    int visit(PlusAssignStatement* stm) override;
     void interprete(Program* program);
 };
 

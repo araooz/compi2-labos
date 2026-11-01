@@ -47,6 +47,8 @@ public:
         DEFAULT,
         ENDSWITCH,
         BREAK,
+        PLUSPLUS,  // ++
+        PLUSASSIGN, // +=
         END      // Fin de entrada
     };
 

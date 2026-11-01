@@ -188,6 +188,23 @@ public:
     ~SwitchStatement(){};
 };
 
+class IncrementStatement : public Stm {
+public:
+    string variable;
+    int accept(Visitor* visitor);
+    IncrementStatement(const string& v);
+    ~IncrementStatement(){};
+};
+
+class PlusAssignStatement : public Stm {
+public:
+    string variable;
+    Exp* valor;
+    int accept(Visitor* visitor);
+    PlusAssignStatement(const string& v, Exp* val);
+    ~PlusAssignStatement(){};
+};
+
 class Program {
 public:
     list<Stm*> cuerpo;

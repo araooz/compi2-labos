@@ -87,11 +87,19 @@ Body* Parser::parseBody(){
 Stm* Parser::parseStm(){
     if (match(Token::ID))
     {
-        AssignStatement* stm = new AssignStatement();
-        stm->variable = previous->text;
-        match(Token::ASSIGN);
-        stm->valor =  parseCE();
-        return stm;
+        string varName = previous->text;
+        if (match(Token::PLUSPLUS)) {
+            return new IncrementStatement(varName);
+        } else if (match(Token::PLUSASSIGN)) {
+            Exp* val = parseCE();
+            return new PlusAssignStatement(varName, val);
+        } else {
+            AssignStatement* stm = new AssignStatement();
+            stm->variable = varName;
+            match(Token::ASSIGN);
+            stm->valor = parseCE();
+            return stm;
+        }
     }
     else if (match(Token::PRINT))
     {

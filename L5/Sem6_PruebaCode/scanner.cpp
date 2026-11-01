@@ -78,7 +78,17 @@ Token* Scanner::nextToken() {
     else if (strchr("+/-*();", c)) {
         switch (c) {
             case ';': token = new Token(Token::SEMICOLON, c); break;
-            case '+': token = new Token(Token::PLUS,  c); break;
+            case '+': 
+                if (current + 1 < input.length() && input[current+1] == '+') {
+                    current++;
+                    token = new Token(Token::PLUSPLUS, input, first, current + 1 - first);
+                } else if (current + 1 < input.length() && input[current+1] == '=') {
+                    current++;
+                    token = new Token(Token::PLUSASSIGN, input, first, current + 1 - first);
+                } else {
+                    token = new Token(Token::PLUS, c);
+                }
+                break;
             case '-': token = new Token(Token::MINUS, c); break;
             case '*': 
             if (input[current+1]=='*')

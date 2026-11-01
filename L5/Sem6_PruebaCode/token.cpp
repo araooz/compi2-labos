@@ -60,6 +60,8 @@ ostream& operator<<(ostream& outs, const Token& tok) {
         case Token::DEFAULT:   outs << "TOKEN(DEFAULT, \""   << tok.text << "\")"; break;
         case Token::ENDSWITCH: outs << "TOKEN(ENDSWITCH, \"" << tok.text << "\")"; break;
         case Token::BREAK:     outs << "TOKEN(BREAK, \""     << tok.text << "\")"; break;
+        case Token::PLUSPLUS:   outs << "TOKEN(PLUSPLUS, \""   << tok.text << "\")"; break;
+        case Token::PLUSASSIGN: outs << "TOKEN(PLUSASSIGN, \"" << tok.text << "\")"; break;
         case Token::END:    outs << "TOKEN(END)"; break;
     }
     return outs;

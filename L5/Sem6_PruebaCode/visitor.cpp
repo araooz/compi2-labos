@@ -77,6 +77,14 @@ int SwitchStatement::accept(Visitor* visitor) {
     return visitor->visit(this);
 }
 
+int IncrementStatement::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
+int PlusAssignStatement::accept(Visitor* visitor) {
+    return visitor->visit(this);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -211,6 +219,18 @@ int PrintVisitor::visit(SwitchStatement* p) {
         p->defaultBody->accept(this);
     }
     cout << "endswitch" << endl;
+    return 0;
+}
+
+int PrintVisitor::visit(IncrementStatement* p) {
+    cout << p->variable << "++" << endl;
+    return 0;
+}
+
+int PrintVisitor::visit(PlusAssignStatement* p) {
+    cout << p->variable << "+=";
+    p->valor->accept(this);
+    cout << endl;
     return 0;
 }
 
@@ -419,5 +439,15 @@ int EVALVisitor::visit(SwitchStatement* p) {
             return 0;
         }
     }
+    return 0;
+}
+
+int EVALVisitor::visit(IncrementStatement* p) {
+    memoria[p->variable] = memoria[p->variable] + 1;
+    return 0;
+}
+
+int EVALVisitor::visit(PlusAssignStatement* p) {
+    memoria[p->variable] = memoria[p->variable] + p->valor->accept(this);
     return 0;
 }

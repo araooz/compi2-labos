@@ -13,6 +13,8 @@ Stmt         ::= Id '=' CExp
                | 'do' Body 'while' CExp
                | 'while' CExp 'do' Body 'endwhile'
                | 'switch' CExp { 'case' CExp Body [ 'break' ] }* [ 'default' Body ] 'endswitch'
+               | id ++ 
+               | id + = CExp
                | 'break'
 
 CExp         ::= LOrExp

@@ -73,3 +73,6 @@ CaseStatement::CaseStatement(Exp* v, Body* b, bool brk) : value(v), body(b), has
 
 // ------------------ SwitchStatement ------------------
 SwitchStatement::SwitchStatement() : expr(nullptr), defaultBody(nullptr) {}
+
+IncrementStatement::IncrementStatement(const string& v) : variable(v) {}
+PlusAssignStatement::PlusAssignStatement(const string& v, Exp* val) : variable(v), valor(val) {}
