@@ -1,0 +1,23 @@
+struct Contador
+    var int valor;
+    var int paso;
+endstruct
+
+fun int incrementar(Contador* c)
+    c.valor = c.valor + c.paso;
+    return c.valor
+endfun
+
+fun int main()
+    var Contador c;
+    var int i;
+    c.valor = 10;
+    c.paso = 5;
+    print(c.valor);
+    i = 0;
+    while i < 3 do
+        print(incrementar(&c));
+        i = i + 1
+    enddo;
+    print(c.valor)
+endfun

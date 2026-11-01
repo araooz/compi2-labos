@@ -1,0 +1,32 @@
+struct Producto
+    var int id;
+    var int precio;
+    var int stock;
+endstruct
+
+fun Producto* crearProducto(int id, int precio, int stock)
+    var Producto* p;
+    p = malloc(sizeof(Producto));
+    p.id = id;
+    p.precio = precio;
+    p.stock = stock;
+    return p
+endfun
+
+fun int valorTotal(Producto* p)
+    return p.precio * p.stock
+endfun
+
+fun int main()
+    var Producto* p1;
+    var Producto* p2;
+    p1 = crearProducto(101, 25, 4);
+    p2 = crearProducto(102, 50, 2);
+    print(p1.id);
+    print(valorTotal(p1));
+    print(p2.id);
+    print(valorTotal(p2));
+    print(valorTotal(p1) + valorTotal(p2));
+    free(p1);
+    free(p2)
+endfun

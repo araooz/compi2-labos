@@ -1,0 +1,23 @@
+struct Rectangulo
+    var int base, altura;
+endstruct
+
+fun int calcularArea(Rectangulo* r)
+    return r.base * r.altura
+endfun
+
+fun int calcularPerimetro(Rectangulo* r)
+    return 2 * (r.base + r.altura)
+endfun
+
+fun int main()
+    var Rectangulo* r;
+    r = malloc(sizeof(Rectangulo));
+    r.base = 12;
+    r.altura = 8;
+    print(r.base);
+    print(r.altura);
+    print(calcularArea(r));
+    print(calcularPerimetro(r));
+    free(r)
+endfun

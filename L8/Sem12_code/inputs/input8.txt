@@ -1,0 +1,66 @@
+struct Nodo
+    var int valor;
+    var Nodo* sig;
+endstruct
+
+struct Lista
+    var Nodo* cabeza;
+    var int tam;
+endstruct
+
+fun int insertar(Lista* l, int val)
+    var Nodo* nuevo;
+    nuevo = malloc(sizeof(Nodo));
+    nuevo.valor = val;
+    nuevo.sig = l.cabeza;
+    l.cabeza = nuevo;
+    l.tam = l.tam + 1;
+    return l.tam
+endfun
+
+fun int sumar(Lista* l)
+    var Nodo* actual;
+    var int total;
+    total = 0;
+    actual = l.cabeza;
+    while actual != 0 do
+        total = total + actual.valor;
+        actual = actual.sig
+    enddo;
+    return total
+endfun
+
+fun int liberar(Lista* l)
+    var Nodo* actual;
+    var Nodo* temp;
+    actual = l.cabeza;
+    while actual != 0 do
+        temp = actual.sig;
+        free(actual);
+        actual = temp
+    enddo;
+    l.cabeza = 0;
+    l.tam = 0;
+    return 0
+endfun
+
+fun int main()
+    var Lista miLista;
+    var Nodo* cur;
+    var int r;
+    miLista.cabeza = 0;
+    miLista.tam = 0;
+    r = insertar(&miLista, 10);
+    r = insertar(&miLista, 20);
+    r = insertar(&miLista, 30);
+    r = insertar(&miLista, 40);
+    print(miLista.tam);
+    cur = miLista.cabeza;
+    while cur != 0 do
+        print(cur.valor);
+        cur = cur.sig
+    enddo;
+    print(sumar(&miLista));
+    r = liberar(&miLista);
+    print(miLista.tam)
+endfun

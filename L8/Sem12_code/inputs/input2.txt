@@ -1,0 +1,18 @@
+struct Vector2D
+    var int vx, vy;
+endstruct
+
+fun int main()
+    var Vector2D v1, v2;
+    var int temp;
+    v1.vx = 100;
+    v1.vy = 200;
+    v2.vx = 300;
+    v2.vy = 400;
+    temp = v1.vx;
+    v1.vx = v2.vx;
+    v2.vx = temp;
+    print(v1.vx);
+    print(v2.vx);
+    print(v1.vy + v2.vy)
+endfun

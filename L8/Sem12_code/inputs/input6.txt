@@ -1,0 +1,29 @@
+struct Alumno
+    var int codigo;
+    var int nota;
+endstruct
+
+fun int main()
+    var Alumno* lista;
+    var int n, i, suma, promedio;
+    n = 4;
+    lista = malloc(n * sizeof(Alumno));
+    i = 0;
+    while i < n do
+        lista[i].codigo = 202600 + i;
+        lista[i].nota = 14 + i * 2;
+        i = i + 1
+    enddo;
+    suma = 0;
+    i = 0;
+    while i < n do
+        print(lista[i].codigo);
+        print(lista[i].nota);
+        suma = suma + lista[i].nota;
+        i = i + 1
+    enddo;
+    promedio = suma / n;
+    print(suma);
+    print(promedio);
+    free(lista)
+endfun

@@ -1,0 +1,395 @@
+========================================
+input1.txt
+========================================
+Ejercicio:
+fun int main()
+    var int x,y;
+    var int* p,q;
+    x = 5;
+    p = &x;
+    y = 100;
+    q = &y;
+    print(*p + *q)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input1.s:
+105
+
+========================================
+input2.txt
+========================================
+Ejercicio:
+fun int intercambiar(int* a, int* b)
+    var int t;
+    t = *a;
+    *a = *b;
+    *b = t;
+    return 0
+endfun
+
+fun int main()
+    var int x, y, r;
+    x = 1;
+    y = 2;
+    r = intercambiar(&x, &y);
+    print(x);
+    print(y)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input2.s:
+2
+1
+
+========================================
+input3.txt
+========================================
+Ejercicio:
+fun int main()
+    var int x;
+    var int* p;
+    var int** pp;
+    x = 7;
+    p = &x;
+    pp = &p;
+    print(**pp);
+    **pp = 8;
+    print(x)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input3.s:
+7
+8
+
+========================================
+input4.txt
+========================================
+Ejercicio:
+fun int main()
+    var int* a;
+    a = malloc(3 * sizeof(int));
+    a[0] = 10;
+    a[1] = 20;
+    a[2] = 30;
+    print(a[0]);
+    print(a[1]);
+    print(a[2]);
+    free(a)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input4.s:
+10
+20
+30
+
+========================================
+input5.txt
+========================================
+Ejercicio:
+fun int main()
+    var int* a;
+    var int n, i, suma;
+    n = 5;
+    a = malloc(n * sizeof(int));
+    i = 0;
+    while i < n do
+        a[i] = i * 2;
+        i = i + 1
+    enddo;
+    suma = 0;
+    i = 0;
+    while i < n do
+        print(a[i]);
+        suma = suma + a[i];
+        i = i + 1
+    enddo;
+    print(suma);
+    free(a)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input5.s:
+0
+2
+4
+6
+8
+20
+
+========================================
+input6.txt
+========================================
+Ejercicio:
+fun int main()
+    var int* a;
+    var int* p;
+    a = malloc(3 * sizeof(int));
+    *a = 5;
+    *(a + 1) = 6;
+    *(a + 2) = 7;
+    print(a[1]);
+    p = a + 2;
+    print(*p);
+    free(a)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input6.s:
+6
+7
+
+========================================
+input7.txt
+========================================
+Ejercicio:
+fun int mayor(int* a, int n)
+    var int i, m;
+    m = a[0];
+    i = 1;
+    while i < n do
+        if a[i] > m then
+            m = a[i]
+        endif;
+        i = i + 1
+    enddo;
+    return m
+endfun
+
+fun int main()
+    var int* a;
+    a = malloc(4 * sizeof(int));
+    a[0] = 3;
+    a[1] = 9;
+    a[2] = 4;
+    a[3] = 1;
+    print(mayor(a, 4));
+    free(a)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input7.s:
+9
+
+========================================
+input8.txt
+========================================
+Ejercicio:
+fun int main()
+    var int** m;
+    m = malloc(2 * sizeof(int*));
+    m[0] = malloc(2 * sizeof(int));
+    m[1] = malloc(2 * sizeof(int));
+    m[0][0] = 1;
+    m[0][1] = 2;
+    m[1][0] = 3;
+    m[1][1] = 4;
+    print(m[0][0] + m[1][1]);
+    print(m[1][0]);
+    free(m[0]);
+    free(m[1]);
+    free(m)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input8.s:
+5
+3
+
+========================================
+input9.txt
+========================================
+Ejercicio:
+fun int main()
+    var int** m;
+    var int n, i, j;
+    n = 3;
+    m = malloc(n * sizeof(int*));
+    i = 0;
+    while i < n do
+        m[i] = malloc(n * sizeof(int));
+        j = 0;
+        while j < n do
+            m[i][j] = i * n + j;
+            j = j + 1
+        enddo;
+        i = i + 1
+    enddo;
+    i = 0;
+    while i < n do
+        j = 0;
+        while j < n do
+            print(m[i][j]);
+            j = j + 1
+        enddo;
+        free(m[i]);
+        i = i + 1
+    enddo;
+    free(m)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input9.s:
+0
+1
+2
+3
+4
+5
+6
+7
+8
+
+========================================
+input10.txt
+========================================
+Ejercicio:
+fun int** crearMatriz(int filas, int cols)
+    var int** m;
+    var int i;
+    m = malloc(filas * sizeof(int*));
+    i = 0;
+    while i < filas do
+        m[i] = malloc(cols * sizeof(int));
+        i = i + 1
+    enddo;
+    return m
+endfun
+
+fun int main()
+    var int** a;
+    var int** b;
+    var int i, j;
+    a = crearMatriz(2, 2);
+    b = crearMatriz(2, 2);
+    i = 0;
+    while i < 2 do
+        j = 0;
+        while j < 2 do
+            a[i][j] = i + j;
+            b[i][j] = 10;
+            print(a[i][j] + b[i][j]);
+            j = j + 1
+        enddo;
+        free(a[i]);
+        free(b[i]);
+        i = i + 1
+    enddo;
+    free(a);
+    free(b)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input10.s:
+10
+11
+11
+12
+
+========================================
+input11.txt
+========================================
+Ejercicio:
+fun int sumarYVaciar(stack<int> p)
+    var int total;
+    total = 0;
+    while p.empty() == false do
+        total = total + p.pop()
+    enddo;
+    return total
+endfun
+
+fun int main()
+    var stack<int> s;
+    var stack<bool> b;
+    var int i;
+    i = 1;
+    while i <= 5 do
+        s.push(i * 10);
+        i = i + 1
+    enddo;
+    print(s.size());
+    print(s.top());
+    s.pop();
+    print(s.pop());
+    print(sumarYVaciar(s));
+    print(s.empty());
+    b.push(true);
+    b.push(3 > 4);
+    print(b.pop());
+    print(b.top())
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input11.s:
+5
+50
+40
+60
+1
+0
+1
+
+========================================
+input12.txt
+========================================
+Ejercicio:
+fun int sumaVector(int* v, int n)
+    var int i, total;
+    total = 0;
+    i = 0;
+    while i < n do
+        total = total + v[i];
+        i = i + 1
+    enddo;
+    return total
+endfun
+
+fun int main()
+    var int* v;
+    var int i;
+    v = malloc(5 * sizeof(int));
+    i = 0;
+    while i < 5 do
+        v[i] = (i + 1) * 10;
+        i = i + 1
+    enddo;
+    print(sumaVector(v, 5));
+    free(v)
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input12.s:
+150
+
+========================================
+input13.txt
+========================================
+Ejercicio:
+fun int main()
+    var stack<int> s;
+    s.push(4);
+    s.push(5);
+    s.push(6);
+    s.pop();
+    print(s.top())
+endfun
+
+TypeChecker: PASÓ (Typecheck exitoso)
+
+Resultado de input13.s:
+5

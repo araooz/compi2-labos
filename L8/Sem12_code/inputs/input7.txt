@@ -1,0 +1,26 @@
+struct Punto
+    var int x, y;
+endstruct
+
+struct Caja
+    var Punto infIzq;
+    var Punto supDer;
+endstruct
+
+fun int areaCaja(Caja* c)
+    var int dx, dy;
+    dx = c.supDer.x - c.infIzq.x;
+    dy = c.supDer.y - c.infIzq.y;
+    return dx * dy
+endfun
+
+fun int main()
+    var Caja c;
+    c.infIzq.x = 3;
+    c.infIzq.y = 5;
+    c.supDer.x = 10;
+    c.supDer.y = 12;
+    print(c.infIzq.x);
+    print(c.supDer.y);
+    print(areaCaja(&c))
+endfun

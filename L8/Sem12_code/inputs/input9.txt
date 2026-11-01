@@ -1,0 +1,33 @@
+struct Buffer
+    var int* datos;
+    var int capacidad;
+    var int cantidad;
+endstruct
+
+fun int agregar(Buffer* b, int elemento)
+    b.datos[b.cantidad] = elemento;
+    b.cantidad = b.cantidad + 1;
+    return b.cantidad
+endfun
+
+fun int main()
+    var Buffer b;
+    var int i, total;
+    b.capacidad = 5;
+    b.cantidad = 0;
+    b.datos = malloc(b.capacidad * sizeof(int));
+    i = 0;
+    while i < 4 do
+        print(agregar(&b, (i + 1) * 10));
+        i = i + 1
+    enddo;
+    total = 0;
+    i = 0;
+    while i < b.cantidad do
+        print(b.datos[i]);
+        total = total + b.datos[i];
+        i = i + 1
+    enddo;
+    print(total);
+    free(b.datos)
+endfun
