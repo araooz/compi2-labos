@@ -272,9 +272,19 @@ Stmt* Parser::parseStmt() {
     }
 }
 
-// CExp ::= BExp [ (<= | < | > | >= | == | !=) BExp ]
+// CExp ::= RExp [ '?:' CExp ]     (Elvis: asocia a la derecha, a ?: b ?: c = a ?: (b ?: c))
 Exp* Parser::parseCExp() {
-    Exp* l = parseBExp();
+    Exp* l = parseRExp();
+    if (match(Token::ELVIS)) {
+        Exp* r = parseCExp();
+        return new BinaryExp(l, r, ELVIS_OP);
+    }
+    return l;
+}
+
+// RExp ::= SExp [ (<= | < | > | >= | == | !=) SExp ]
+Exp* Parser::parseRExp() {
+    Exp* l = parseSExp();
     BinaryOp op;
     if (match(Token::LE))      op = LE_OP;
     else if (match(Token::LT)) op = LT_OP;
@@ -283,8 +293,18 @@ Exp* Parser::parseCExp() {
     else if (match(Token::EQ)) op = EQ_OP;
     else if (match(Token::NE)) op = NE_OP;
     else return l;
-    Exp* r = parseBExp();
+    Exp* r = parseSExp();
     return new BinaryExp(l, r, op);
+}
+
+// SExp ::= BExp [ '<=>' BExp ]     (como en C++, <=> va antes que las comparaciones)
+Exp* Parser::parseSExp() {
+    Exp* l = parseBExp();
+    if (match(Token::SPACESHIP)) {
+        Exp* r = parseBExp();
+        return new BinaryExp(l, r, SPACESHIP_OP);
+    }
+    return l;
 }
 
 // BExp ::= expr { (+ | -) expr }*
@@ -331,9 +351,13 @@ Exp* Parser::parseTerm() {
     return l;
 }
 
-// factor ::= '*' factor | '&' factor | primary ( '[' CExp ']' | '.' metodo '(' [CExp] ')' )*
+// factor ::= '-' factor | '*' factor | '&' factor | primary ( '[' CExp ']' | '.' metodo '(' [CExp] ')' )*
 Exp* Parser::parseFactor() {
-    if (match(Token::MUL)) {
+    if (match(Token::MINUS)) {                      // -5 es un literal; -e equivale a 0 - e
+        if (match(Token::NUM)) return new NumberExp(-stoi(previous->text));
+        return new BinaryExp(new NumberExp(0), parseFactor(), MINUS_OP);
+    }
+    else if (match(Token::MUL)) {
         return new DerefExp(parseFactor());
     }
     else if (match(Token::POW)) {                   // **p llega como un solo token

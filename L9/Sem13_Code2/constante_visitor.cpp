@@ -37,11 +37,17 @@ void ConstanteVisitor::marcar(Programa* program) {
 // El Type que devuelven no se usa: el resultado queda en los atributos de cada Exp
 
 // left op right es constante si ambos operandos lo son.
-// No se pliega una división entre 0 (ni LLONG_MIN / -1): se deja que falle al ejecutar
+// No se pliega una división entre 0 (ni LLONG_MIN / -1): se deja que falle al ejecutar.
+// a ?: b es constante si a es una constante distinta de 0 (b no se evalúa), o si a es 0 y b es constante
 Type ConstanteVisitor::visit(BinaryExp* exp) {
     exp->left->accept(this);
     exp->right->accept(this);
     noConstante(exp);
+    if (exp->op == ELVIS_OP) {
+        if (exp->left->esConstante && exp->left->valorConstante != 0) constante(exp, exp->left->valorConstante);
+        else if (exp->left->esConstante && exp->right->esConstante) constante(exp, exp->right->valorConstante);
+        return Type();
+    }
     if (!exp->left->esConstante || !exp->right->esConstante) return Type();
     long long a = exp->left->valorConstante;
     long long b = exp->right->valorConstante;
@@ -59,6 +65,7 @@ Type ConstanteVisitor::visit(BinaryExp* exp) {
         case GE_OP:    constante(exp, a >= b); break;
         case EQ_OP:    constante(exp, a == b); break;
         case NE_OP:    constante(exp, a != b); break;
+        case SPACESHIP_OP: constante(exp, (a > b) - (a < b)); break;
         default:       break;
     }
     return Type();

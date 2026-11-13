@@ -52,11 +52,14 @@ bool Parser::isAtEnd() {
     return current->type == Token::END;
 }
 
-// Programa ::= FunDec+
+// Programa ::= StructDec* FunDec+
 Programa* Parser::parseProgram() {
     Programa* p = new Programa();
+    while (check(Token::STRUCT)) {
+        p->estructuras.push_back(parseStructDec());
+    }
     if (!check(Token::FUN)) {
-        throw runtime_error("Error sintáctico: el programa debe empezar con una función (fun)");
+        throw runtime_error("Error sintáctico: se esperaba una función (fun)");
     }
     while (check(Token::FUN)) {
         p->funciones.push_back(parseFunDec());
@@ -69,15 +72,38 @@ Programa* Parser::parseProgram() {
     return p;
 }
 
-// tipo ::= (int | bool) '*'* | stack '<' tipo '>'     (el tipo de los elementos no puede ser otra pila)
+// StructDec ::= struct id ( var tipo id (',' id)* ';' )* endstruct
+StructDec* Parser::parseStructDec() {
+    match(Token::STRUCT);
+    StructDec* s = new StructDec();
+    if (!match(Token::ID)) {
+        throw runtime_error("Error sintáctico: se esperaba el nombre del struct");
+    }
+    s->nombre = previous->text;
+    if (structNames.count(s->nombre)) {
+        throw runtime_error("Error sintáctico: struct declarado dos veces: " + s->nombre);
+    }
+    structNames.insert(s->nombre);
+    while (check(Token::VAR)) {
+        VarDec* d = parseVarDec();
+        for (const string& v : d->variables) s->campos.push_back({d->tipo, v});
+        delete d;
+    }
+    if (!match(Token::ENDSTRUCT)) {
+        throw runtime_error("Error sintáctico: se esperaba 'endstruct' al final de " + s->nombre);
+    }
+    return s;
+}
+
+// tipo ::= (int | bool | StructName) '*'* | stack '<' tipo '>'
 string Parser::parseTipo() {
-    if (!match(Token::ID) || (previous->text != "int" && previous->text != "bool" && previous->text != "stack")) {
-        throw runtime_error("Error sintáctico: se esperaba un tipo (int, bool, int*, int**, stack<int>, ...)");
+    if (!match(Token::ID)) {
+        throw runtime_error("Error sintáctico: se esperaba un tipo (int, bool, NombreStruct, ...)");
     }
     string tipo = previous->text;
     if (tipo == "stack") {
         if (!match(Token::LT)) {
-            throw runtime_error("Error sintáctico: se esperaba '<' después de stack (por ejemplo stack<int>)");
+            throw runtime_error("Error sintáctico: se esperaba '<' después de stack");
         }
         string elemento = parseTipo();
         if (elemento.rfind("stack", 0) == 0) {
@@ -345,8 +371,7 @@ Exp* Parser::parseFactor() {
     return parseIndices(parsePrimary());
 }
 
-// Agrega a base cada sufijo que venga a continuación:
-//   índices '[' CExp ']' (m[i][j]) y métodos de pila '.' metodo '(' [CExp] ')' (s.push(1), s.top())
+// Agrega a base cada sufijo: índices '[' CExp ']' y accesos a campo '.' id
 Exp* Parser::parseIndices(Exp* base) {
     while (true) {
         if (match(Token::LBRACKET)) {
@@ -358,25 +383,31 @@ Exp* Parser::parseIndices(Exp* base) {
         }
         else if (match(Token::DOT)) {
             if (!match(Token::ID)) {
-                throw runtime_error("Error sintáctico: se esperaba un método después de '.'");
+                throw runtime_error("Error sintáctico: se esperaba un campo o método después de '.'");
             }
-            string metodo = previous->text;
-            StackOp op;
-            if (metodo == "push")       op = PUSH_OP;
-            else if (metodo == "pop")   op = POP_OP;
-            else if (metodo == "top")   op = TOP_OP;
-            else if (metodo == "empty") op = EMPTY_OP;
-            else if (metodo == "size")  op = SIZE_OP;
-            else throw runtime_error("Error sintáctico: método desconocido '" + metodo
-                                     + "' (una pila tiene push, pop, top, empty y size)");
-            if (!match(Token::LPAREN)) {
-                throw runtime_error("Error sintáctico: se esperaba '(' después de ." + metodo);
+            string nombre = previous->text;
+            // Si sigue '(', es un método de pila
+            if (check(Token::LPAREN)) {
+                StackOp op;
+                if (nombre == "push")       op = PUSH_OP;
+                else if (nombre == "pop")   op = POP_OP;
+                else if (nombre == "top")   op = TOP_OP;
+                else if (nombre == "empty") op = EMPTY_OP;
+                else if (nombre == "size")  op = SIZE_OP;
+                else throw runtime_error("Error sintáctico: método desconocido '" + nombre + "'");
+                if (!match(Token::LPAREN)) {
+                    throw runtime_error("Error sintáctico: se esperaba '(' después de ." + nombre);
+                }
+                Exp* valor = op == PUSH_OP ? parseCExp() : nullptr;
+                if (!match(Token::RPAREN)) {
+                    throw runtime_error("Error sintáctico: se esperaba ')' en ." + nombre + "(...)");
+                }
+                base = new StackOpExp(base, op, valor);
             }
-            Exp* valor = op == PUSH_OP ? parseCExp() : nullptr;
-            if (!match(Token::RPAREN)) {
-                throw runtime_error("Error sintáctico: se esperaba ')' en ." + metodo + "(...)");
+            else {
+                // Acceso a campo de struct
+                base = new FieldAccessExp(base, nombre);
             }
-            base = new StackOpExp(base, op, valor);
         }
         else {
             return base;
@@ -437,9 +468,9 @@ Exp* Parser::parsePrimary() {
     }
     else if (match(Token::SIZEOF)) {
         if (!match(Token::LPAREN)) throw runtime_error("Error sintáctico: se esperaba '(' tras sizeof");
-        parseTipo();
+        string tipoNombre = parseTipo();
         if (!match(Token::RPAREN)) throw runtime_error("Error sintáctico: se esperaba ')' en sizeof");
-        return new NumberExp(8);                    // int, bool y punteros ocupan 8 bytes
+        return new SizeofExp(tipoNombre);           // el tamaño lo resuelve el TypeChecker
     }
     else {
         throw runtime_error("Error sintáctico");

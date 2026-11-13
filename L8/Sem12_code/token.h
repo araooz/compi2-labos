@@ -54,6 +54,8 @@ public:
         FREE,
         SIZEOF,
         DOT,
+        STRUCT,
+        ENDSTRUCT,
         END
     };
 

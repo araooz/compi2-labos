@@ -51,10 +51,20 @@ void TypeChecker::esperarBool(Exp* condicion, const string& donde) {
 // Orden: int (<= | < | > | >=) int -> bool
 // Igualdad: a (== | !=) b con a y b del mismo tipo (int, bool o puntero) -> bool
 // Aritmética de punteros: puntero + int y puntero - int -> puntero del mismo tipo
+// Spaceship: int <=> int -> int (-1, 0 o 1)
+// Elvis: a ?: b con a y b del mismo tipo (int, bool o puntero) -> ese tipo
 Type TypeChecker::visit(BinaryExp* exp) {
     Type l = exp->left->accept(this);
     Type r = exp->right->accept(this);
     string op = Exp::binopToChar(exp->op);
+    if (exp->op == ELVIS_OP) {
+        if (l.isVoid() || l.isStack() || (!l.aceptaValor(r) && !r.aceptaValor(l))) {
+            error("el operador '?:' necesita dos operandos int, bool o puntero del mismo tipo, pero recibió "
+                  + l.kindName() + " ?: " + r.kindName());
+        }
+        if (l.isVoidPtr()) return r;             // malloc(n) ?: p tiene el tipo de p
+        return l;
+    }
     if (exp->op == EQ_OP || exp->op == NE_OP) {
         if (l.isVoid() || (!l.aceptaValor(r) && !r.aceptaValor(l))) {
             error("el operador '" + op + "' necesita dos operandos del mismo tipo, pero recibió "

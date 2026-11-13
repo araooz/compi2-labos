@@ -33,9 +33,9 @@ Token* Scanner::nextToken() {
             current++;
         token = new Token(Token::NUM, input, first, current - first);
     }
-    else if (isalpha(c)) {
+    else if (isalpha(c) || c == '_') {
         current++;
-        while (current < input.length() && isalnum(input[current]))
+        while (current < input.length() && (isalnum(input[current]) || input[current] == '_'))
             current++;
         string lexema = input.substr(first, current - first);
         if (lexema == "sqrt")          return new Token(Token::SQRT,     input, first, current - first);
@@ -60,7 +60,7 @@ Token* Scanner::nextToken() {
         else if (lexema == "sizeof")   return new Token(Token::SIZEOF,   input, first, current - first);
         else                           return new Token(Token::ID,       input, first, current - first);
     }
-    else if (strchr("+/-*();=<>!,[]&.", c)) {
+    else if (strchr("+/-*();=<>!,[]&.?", c)) {
         switch (c) {
             case '+': token = new Token(Token::PLUS,    c); break;
             case '-': token = new Token(Token::MINUS,   c); break;
@@ -83,7 +83,11 @@ Token* Scanner::nextToken() {
                 }
                 break;
             case '<':
-                if (input[current + 1] == '=') {
+                if (input[current + 1] == '=' && input[current + 2] == '>') {
+                    current += 2;
+                    token = new Token(Token::SPACESHIP, input, first, current + 1 - first);
+                }
+                else if (input[current + 1] == '=') {
                     current++;
                     token = new Token(Token::LE, input, first, current + 1 - first);
                 }
@@ -107,6 +111,15 @@ Token* Scanner::nextToken() {
                 }
                 else {
                     token = new Token(Token::ASSIGN, c);
+                }
+                break;
+            case '?':
+                if (input[current + 1] == ':') {
+                    current++;
+                    token = new Token(Token::ELVIS, input, first, current + 1 - first);
+                }
+                else {
+                    token = new Token(Token::ERR, c);
                 }
                 break;
             case '!':

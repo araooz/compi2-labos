@@ -20,6 +20,8 @@ string Exp::binopToChar(BinaryOp op) {
         case GE_OP:    return ">=";
         case EQ_OP:    return "==";
         case NE_OP:    return "!=";
+        case SPACESHIP_OP: return "<=>";
+        case ELVIS_OP: return "?:";
         default:       return "?";
     }
 }

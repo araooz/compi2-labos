@@ -75,6 +75,7 @@ static Type tipoResultado(BinaryOp op, Type l, Type r) {
         case GE_OP:    return Type(a >= b);
         case EQ_OP:    return Type(a == b);
         case NE_OP:    return Type(a != b);
+        case SPACESHIP_OP: return Type((a > b) - (a < b));
         default:       return Type();
     }
 }
@@ -84,11 +85,22 @@ static Type tipoResultado(BinaryOp op, Type l, Type r) {
 //   - Sethi-Ullman: si la derecha tiene etiqueta 0 es una hoja y cargarla solo usa %rax,
 //     así que la izquierda espera en %rcx en vez de guardarse en la pila
 //   - si no, la izquierda se guarda con pushq mientras se evalúa la derecha
+//   - a ?: b: si a no es 0 queda en %rax y b no se evalúa
 Type GencodeVisitor::visit(BinaryExp* exp) {
     if (exp->esConstante) {
         out << "movq $" << exp->valorConstante << ", %rax" << endl;
         if (esComparacion(exp->op)) return Type(exp->valorConstante != 0);
         return Type((int)exp->valorConstante);
+    }
+    if (exp->op == ELVIS_OP) {
+        int id = etiquetas++;
+        Type l = exp->left->accept(this);
+        out << "cmpq $0, %rax" << endl;
+        out << "jne elvis_end_" << id << endl;
+        Type r = exp->right->accept(this);
+        out << "elvis_end_" << id << ":" << endl;
+        if (l.isVoidPtr()) return r;
+        return l;
     }
     Type l, r;
     if (exp->right->etiqueta == 0) {
@@ -157,6 +169,14 @@ void GencodeVisitor::operar(BinaryExp* exp, Type l) {
             out << "cmpq %rcx, %rax" << endl;
             out << instruccionSet(exp->op) << " %al" << endl;
             out << "movzbq %al, %rax" << endl;
+            break;
+        case SPACESHIP_OP:
+            // %rax = (left > right) - (left < right): -1, 0 o 1
+            out << "cmpq %rcx, %rax" << endl;
+            out << "setg %al" << endl;
+            out << "setl %cl" << endl;
+            out << "subb %cl, %al" << endl;
+            out << "movsbq %al, %rax" << endl;
             break;
         default:
             break;

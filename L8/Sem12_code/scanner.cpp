@@ -59,6 +59,8 @@ Token* Scanner::nextToken() {
         else if (lexema == "malloc")   return new Token(Token::MALLOC,   input, first, current - first);
         else if (lexema == "free")     return new Token(Token::FREE,     input, first, current - first);
         else if (lexema == "sizeof")   return new Token(Token::SIZEOF,   input, first, current - first);
+        else if (lexema == "struct")   return new Token(Token::STRUCT,   input, first, current - first);
+        else if (lexema == "endstruct") return new Token(Token::ENDSTRUCT, input, first, current - first);
         else                           return new Token(Token::ID,       input, first, current - first);
     }
     else if (strchr("+/-*();=<>!,[]&.", c)) {

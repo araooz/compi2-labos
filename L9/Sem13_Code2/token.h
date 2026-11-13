@@ -53,6 +53,8 @@ public:
         FREE,
         SIZEOF,
         DOT,
+        SPACESHIP,
+        ELVIS,
         END
     };
 

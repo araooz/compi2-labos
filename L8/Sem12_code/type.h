@@ -19,13 +19,14 @@ using namespace std;
 //   stack<int> -> base INT, nivel 0    stack<int*> -> base INT, nivel 1
 class Type {
 public:
-    enum Kind { VOID, INT, BOOL, PTR, STACK };
+    enum Kind { VOID, INT, BOOL, PTR, STACK, STRUCT };
 
     Kind kind;
     int intValue;
     bool boolValue;
     Kind base;                    // PTR: tipo base (INT, BOOL o VOID); STACK: base del elemento
     int nivel;                    // PTR: cantidad de '*'; STACK: '*' del elemento
+    string structName;            // STRUCT o PTR a STRUCT: nombre del struct
 
     Type();                       // VOID
     Type(int v);                  // INT con valor v
@@ -33,6 +34,8 @@ public:
     static Type puntero(Kind base, int nivel);   // PTR (base, nivel)
     static Type pila(const Type& elemento);      // STACK de elementos de ese tipo
     static Type desdeNombre(const string& nombre); // "int", "bool*", "int**", "stack<int>", ...
+    static Type estructura(const string& nombre);   // tipo struct con el nombre dado
+    static Type punteroStruct(const string& nombre, int nivel); // puntero a struct
 
     bool isInt() const;
     bool isBool() const;
@@ -40,6 +43,8 @@ public:
     bool isPtr() const;
     bool isVoidPtr() const;       // void*: puntero genérico de malloc
     bool isStack() const;
+    bool isStruct() const;        // tipo struct
+    bool isStructPtr() const;     // puntero a struct
     Type elemento() const;        // tipo de los elementos de una pila (stack<int> -> int)
     Type apuntado() const;        // tipo de *p (int** -> int*, int* -> int)
     Type direccion() const;       // tipo de &x (int -> int*, int* -> int**)

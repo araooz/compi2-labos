@@ -3,6 +3,7 @@
 
 #include "scanner.h"
 #include "ast.h"
+#include <set>
 
 // Parser descendente recursivo: consume tokens del scanner y construye el AST
 class Parser {
@@ -10,6 +11,7 @@ private:
     Scanner* scanner;
     Token *current, *previous;
     int loopDepth = 0;   // cantidad de while abiertos (para validar break)
+    set<string> structNames; // nombres de structs declarados
     bool match(Token::Type ttype);
     bool check(Token::Type ttype);
     bool advance();
@@ -20,6 +22,7 @@ public:
     Programa* parseProgram();
     Body* parseBody();
     VarDec* parseVarDec();
+    StructDec* parseStructDec();
     FunDec* parseFunDec();
     string parseTipo();
     Stmt* parseStmt();

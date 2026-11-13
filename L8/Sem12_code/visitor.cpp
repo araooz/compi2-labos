@@ -26,9 +26,16 @@ static string instruccionSet(BinaryOp op) {
     }
 }
 
-// Indica si la expresión designa una posición de memoria: x, a[i] o *p
+// Indica si la expresión designa una posición de memoria: x, a[i], *p o s.campo
 static bool esLvalue(Exp* e) {
-    return dynamic_cast<IdExp*>(e) || dynamic_cast<IndexExp*>(e) || dynamic_cast<DerefExp*>(e);
+    return dynamic_cast<IdExp*>(e) || dynamic_cast<IndexExp*>(e) || dynamic_cast<DerefExp*>(e)
+        || dynamic_cast<FieldAccessExp*>(e);
+}
+
+// Indica si la expresión es el literal 0, que vale como puntero nulo (p = 0, p != 0)
+static bool esNulo(Exp* e) {
+    NumberExp* n = dynamic_cast<NumberExp*>(e);
+    return n && !n->esBool && n->value == 0;
 }
 
 // =====================================================
@@ -45,6 +52,8 @@ Type DerefExp::accept(Visitor* visitor)   { return visitor->visit(this); }
 Type AddrExp::accept(Visitor* visitor)    { return visitor->visit(this); }
 Type MallocExp::accept(Visitor* visitor)  { return visitor->visit(this); }
 Type StackOpExp::accept(Visitor* visitor) { return visitor->visit(this); }
+Type FieldAccessExp::accept(Visitor* visitor) { return visitor->visit(this); }
+Type SizeofExp::accept(Visitor* visitor)  { return visitor->visit(this); }
 
 void AssignStmt::accept(Visitor* visitor)  { visitor->visit(this); }
 void StackStmt::accept(Visitor* visitor)   { visitor->visit(this); }
@@ -84,10 +93,10 @@ Type GencodeVisitor::visit(BinaryExp* exp) {
     out << "movq %rax, %rcx" << endl;
     out << "popq %rax" << endl;
     pila--;
-    // Aritmética de punteros: p + i avanza i elementos, es decir, i * 8 bytes
+    // Aritmética de punteros: p + i avanza i elementos, es decir, i * tamaño del elemento
     bool aritmeticaPunteros = l.isPtr() && (exp->op == PLUS_OP || exp->op == MINUS_OP);
     if (aritmeticaPunteros) {
-        out << "imulq $" << TAM_VARIABLE << ", %rcx" << endl;
+        out << "imulq $" << tamTipo(l.apuntado()) << ", %rcx" << endl;
     }
     switch (exp->op) {
         case PLUS_OP:
@@ -162,10 +171,13 @@ Type GencodeVisitor::visit(NumberExp* exp) {
     return Type(exp->value);
 }
 
-// Carga el valor de la variable desde la pila en %rax
+// Carga el valor de la variable desde la pila en %rax.
+// Un struct no cabe en %rax: su valor es la dirección de su primer campo
 Type GencodeVisitor::visit(IdExp* exp) {
-    out << "movq " << posicion.lookup(exp->value) * -TAM_VARIABLE << "(%rbp), %rax" << endl;
-    return tipos.lookup(exp->value);
+    Type t = tipos.lookup(exp->value);
+    string instr = t.isStruct() ? "leaq " : "movq ";
+    out << instr << posicion.lookup(exp->value) * -TAM_VARIABLE << "(%rbp), %rax" << endl;
+    return t;
 }
 
 // Genera el código del ifexp: deja en %rax el valor de la rama elegida
@@ -200,17 +212,38 @@ Type GencodeVisitor::visit(FCallExp* exp) {
 }
 
 // a[i]: calcula la dirección del elemento y carga su valor en %rax
+// (si el elemento es un struct, se queda con su dirección)
 Type GencodeVisitor::visit(IndexExp* exp) {
     Type t = direccion(exp);
-    out << "movq (%rax), %rax" << endl;
+    if (!t.isStruct()) out << "movq (%rax), %rax" << endl;
     return t;
 }
 
 // *p: evalúa el puntero y carga el valor guardado en esa dirección
 Type GencodeVisitor::visit(DerefExp* exp) {
     Type t = direccion(exp);
-    out << "movq (%rax), %rax" << endl;
+    if (!t.isStruct()) out << "movq (%rax), %rax" << endl;
     return t;
+}
+
+// s.campo: calcula la dirección del campo y carga su valor en %rax
+// (si el campo es un struct anidado, se queda con su dirección)
+Type GencodeVisitor::visit(FieldAccessExp* exp) {
+    Type t = direccion(exp);
+    if (!t.isStruct()) out << "movq (%rax), %rax" << endl;
+    return t;
+}
+
+// sizeof(tipo): el tamaño en bytes ya se conoce al compilar
+Type GencodeVisitor::visit(SizeofExp* exp) {
+    int bytes = tamTipo(tipoDe(exp->tipoNombre));
+    out << "movq $" << bytes << ", %rax" << endl;
+    return Type(bytes);
+}
+
+// Bytes que ocupa un valor del tipo: 8, o 8 por cada slot si es un struct
+int GencodeVisitor::tamTipo(const Type& t) {
+    return checker->slotsDe(t) * TAM_VARIABLE;
 }
 
 // &x: deja en %rax la dirección del lvalue
@@ -285,9 +318,10 @@ Type GencodeVisitor::visit(StackOpExp* exp) {
 }
 
 // Deja en %rax la dirección de un lvalue y devuelve el tipo del valor guardado ahí:
-//   x    -> posición de x en la pila
-//   a[i] -> a + i * 8 (a es la dirección del primer elemento)
-//   *p   -> el valor de p
+//   x       -> posición de x en la pila
+//   a[i]    -> a + i * tamaño del elemento (a es la dirección del primer elemento)
+//   *p      -> el valor de p
+//   s.campo -> dirección de s (o valor de s si es un puntero a struct) + offset del campo
 Type GencodeVisitor::direccion(Exp* lvalue) {
     if (IdExp* id = dynamic_cast<IdExp*>(lvalue)) {
         out << "leaq " << posicion.lookup(id->value) * -TAM_VARIABLE << "(%rbp), %rax" << endl;
@@ -301,11 +335,26 @@ Type GencodeVisitor::direccion(Exp* lvalue) {
         out << "movq %rax, %rcx" << endl;
         out << "popq %rax" << endl;
         pila--;
-        out << "leaq (%rax,%rcx," << TAM_VARIABLE << "), %rax" << endl;
-        return base.apuntado();
+        Type elemento = base.apuntado();
+        int tam = tamTipo(elemento);
+        if (tam == TAM_VARIABLE) {
+            out << "leaq (%rax,%rcx," << TAM_VARIABLE << "), %rax" << endl;
+        }
+        else {
+            out << "imulq $" << tam << ", %rcx" << endl;
+            out << "addq %rcx, %rax" << endl;
+        }
+        return elemento;
     }
     if (DerefExp* deref = dynamic_cast<DerefExp*>(lvalue)) {
         return deref->puntero->accept(this).apuntado();
+    }
+    if (FieldAccessExp* acceso = dynamic_cast<FieldAccessExp*>(lvalue)) {
+        // Tanto un struct como un puntero a struct dejan en %rax la dirección del struct
+        Type obj = acceso->objeto->accept(this);
+        const CampoInfo* c = checker->campo(obj.structName, acceso->campo);
+        if (c->offset != 0) out << "addq $" << c->offset << ", %rax" << endl;
+        return tipoDe(c->tipo);
     }
     throw runtime_error("la expresión no tiene dirección");
 }
@@ -411,13 +460,23 @@ void GencodeVisitor::visit(ReturnStmt* stm) {
 }
 
 // Declara cada variable en el nivel actual: le asigna una posición en la pila y su tipo.
-// Una pila nace vacía: se reserva su cabecera en el heap con tope = 0 y tamaño = 0
+// Una pila nace vacía: se reserva su cabecera en el heap con tope = 0 y tamaño = 0.
+// Un struct ocupa N slots seguidos; su posición es la del slot más bajo, para que
+// el campo con offset k quede en dirección + k (direcciones crecientes)
 void GencodeVisitor::visit(VarDec* dec) {
+    Type tipo = tipoDe(dec->tipo);
     for (const string& v : dec->variables) {
+        int slots = checker->slotsDe(tipo);
+        contador += slots - 1;
         posicion.add_var(v, contador++);
-        tipos.add_var(v, tipoDe(dec->tipo));
+        tipos.add_var(v, tipo);
         int offset = posicion.lookup(v) * -TAM_VARIABLE;
-        if (tipoDe(dec->tipo).isStack()) {
+        if (tipo.isStruct()) {
+            for (int i = 0; i < slots; i++) {
+                out << "movq $0, " << offset + i * TAM_VARIABLE << "(%rbp)" << endl;   // campos en 0
+            }
+        }
+        else if (tipo.isStack()) {
             out << "movq $" << TAM_CABECERA_PILA << ", %rdi" << endl;
             llamar("malloc@PLT");
             out << "movq $0, (%rax)" << endl;
@@ -520,6 +579,68 @@ int TypeChecker::espacioPila(const string& funcion) {
     return ((bytes + 15) / 16) * 16;
 }
 
+// Slots de 8 bytes que ocupa un valor del tipo: los structs, la suma de sus campos; el resto, 1
+int TypeChecker::slotsDe(const Type& t) const {
+    if (t.isStruct()) return structs.at(t.structName).tamSlots;
+    return 1;
+}
+
+// Información del campo de un struct, o nullptr si el struct no tiene ese campo
+const CampoInfo* TypeChecker::campo(const string& structNombre, const string& nombre) const {
+    auto s = structs.find(structNombre);
+    if (s == structs.end()) return nullptr;
+    for (const auto& c : s->second.campos) {
+        if (c.first == nombre) return &c.second;
+    }
+    return nullptr;
+}
+
+// Verifica que el tipo exista: int, bool, stack<...> o un struct declarado (con o sin '*')
+void TypeChecker::validarTipo(const string& nombre, const string& donde) {
+    if (nombre.rfind("stack<", 0) == 0) {
+        string elemento = nombre.substr(6, nombre.size() - 7);
+        string base = elemento.substr(0, elemento.find('*'));
+        if (base != "int" && base != "bool") {
+            error("tipo desconocido en " + donde + ": " + nombre + " (una pila guarda int, bool o punteros)");
+        }
+        return;
+    }
+    string base = nombre.substr(0, nombre.find('*'));
+    if (base != "int" && base != "bool" && !structs.count(base)) {
+        error("tipo desconocido en " + donde + ": " + nombre);
+    }
+}
+
+// Registra un struct: cada campo ocupa sus slots uno tras otro; un struct anidado va en línea.
+// Un campo puede ser un puntero al propio struct (Nodo* sig), pero no el struct por valor
+void TypeChecker::registrarStruct(StructDec* s) {
+    if (structs.count(s->nombre)) {
+        error("struct declarado dos veces: " + s->nombre);
+    }
+    StructInfo info;
+    info.nombre = s->nombre;
+    info.tamSlots = 0;
+    structs[s->nombre] = info;                     // ya visible para punteros a sí mismo
+    for (const StructField& f : s->campos) {
+        if (f.tipo == s->nombre) {
+            error("el struct " + s->nombre + " no puede contenerse a sí mismo (usa " + s->nombre + "*)");
+        }
+        validarTipo(f.tipo, "el struct " + s->nombre);
+        if (campo(s->nombre, f.nombre)) {
+            error("campo repetido en " + s->nombre + ": " + f.nombre);
+        }
+        Type t = tipoDe(f.tipo);
+        if (t.isStack()) {
+            error("el campo " + f.nombre + " de " + s->nombre + " no puede ser una pila");
+        }
+        structs[s->nombre].campos.push_back({f.nombre, {f.tipo, structs[s->nombre].tamSlots * TAM_VARIABLE}});
+        structs[s->nombre].tamSlots += slotsDe(t);
+    }
+    if (structs[s->nombre].tamSlots == 0) {
+        error("el struct " + s->nombre + " no tiene campos");
+    }
+}
+
 // Verifica que la condición de una sentencia sea bool
 void TypeChecker::esperarBool(Exp* condicion, const string& donde) {
     Type c = condicion->accept(this);
@@ -539,7 +660,10 @@ Type TypeChecker::visit(BinaryExp* exp) {
     Type r = exp->right->accept(this);
     string op = Exp::binopToChar(exp->op);
     if (exp->op == EQ_OP || exp->op == NE_OP) {
-        if (l.isVoid() || (!l.aceptaValor(r) && !r.aceptaValor(l))) {
+        if ((l.isPtr() && esNulo(exp->right)) || (r.isPtr() && esNulo(exp->left))) {
+            return Type(false);                  // p == 0, p != 0
+        }
+        if (l.isVoid() || l.isStruct() || r.isStruct() || (!l.aceptaValor(r) && !r.aceptaValor(l))) {
             error("el operador '" + op + "' necesita dos operandos del mismo tipo, pero recibió "
                   + l.kindName() + " " + op + " " + r.kindName());
         }
@@ -604,7 +728,8 @@ Type TypeChecker::visit(FCallExp* exp) {
     }
     for (size_t i = 0; i < exp->argumentos.size(); i++) {
         Type t = exp->argumentos[i]->accept(this);
-        if (!tipoDe(f->parametros_tipos[i]).aceptaValor(t)) {
+        Type param = tipoDe(f->parametros_tipos[i]);
+        if (!param.aceptaValor(t) && !(param.isPtr() && esNulo(exp->argumentos[i]))) {
             error("el argumento " + to_string(i + 1) + " de " + f->nombre + " debe ser "
                   + f->parametros_tipos[i] + ", pero es " + t.kindName());
         }
@@ -640,10 +765,10 @@ Type TypeChecker::visit(DerefExp* exp) {
     return p.apuntado();
 }
 
-// &x: x debe tener dirección (variable, a[i] o *p); el resultado es un puntero a su tipo
+// &x: x debe tener dirección (variable, a[i], *p o s.campo); el resultado es un puntero a su tipo
 Type TypeChecker::visit(AddrExp* exp) {
     if (!esLvalue(exp->lvalue)) {
-        error("'&' necesita una variable, un elemento a[i] o un *p");
+        error("'&' necesita una variable, un elemento a[i], un *p o un s.campo");
     }
     Type t = exp->lvalue->accept(this);
     if (t.isStack()) {
@@ -659,6 +784,28 @@ Type TypeChecker::visit(MallocExp* exp) {
         error("malloc necesita la cantidad de bytes (int), pero recibió " + b.kindName());
     }
     return Type::puntero(Type::VOID, 1);
+}
+
+// s.campo: s es un struct o un puntero a struct (se desreferencia solo, como p->campo en C);
+// el resultado es el tipo del campo
+Type TypeChecker::visit(FieldAccessExp* exp) {
+    Type obj = exp->objeto->accept(this);
+    bool esStruct = obj.isStruct() || (obj.isStructPtr() && obj.nivel == 1);
+    if (!esStruct) {
+        error("." + exp->campo + " solo se puede usar sobre un struct o un puntero a struct, pero se usó sobre un "
+              + obj.kindName());
+    }
+    const CampoInfo* c = campo(obj.structName, exp->campo);
+    if (!c) {
+        error("el struct " + obj.structName + " no tiene el campo " + exp->campo);
+    }
+    return tipoDe(c->tipo);
+}
+
+// sizeof(tipo): el tipo debe existir; el resultado es un int
+Type TypeChecker::visit(SizeofExp* exp) {
+    validarTipo(exp->tipoNombre, "sizeof");
+    return Type(slotsDe(tipoDe(exp->tipoNombre)) * TAM_VARIABLE);
 }
 
 // s.metodo(...): s debe ser una pila.
@@ -696,7 +843,10 @@ void TypeChecker::visit(AssignStmt* stm) {
     }
     Type declarado = tipos.lookup(stm->id);
     Type t = stm->e->accept(this);
-    if (!declarado.aceptaValor(t)) {
+    if (declarado.isStruct()) {
+        error("no se puede asignar un struct completo (" + stm->id + "); asigna campo por campo");
+    }
+    if (!declarado.aceptaValor(t) && !(declarado.isPtr() && esNulo(stm->e))) {
         error("no se puede asignar " + t.kindName() + " a la variable "
               + declarado.kindName() + " " + stm->id);
     }
@@ -711,7 +861,10 @@ void TypeChecker::visit(StackStmt* stm) {
 void TypeChecker::visit(StoreStmt* stm) {
     Type destino = stm->destino->accept(this);
     Type t = stm->e->accept(this);
-    if (!destino.aceptaValor(t)) {
+    if (destino.isStruct()) {
+        error("no se puede asignar un struct completo (" + destino.kindName() + "); asigna campo por campo");
+    }
+    if (!destino.aceptaValor(t) && !(destino.isPtr() && esNulo(stm->e))) {
         error("no se puede asignar " + t.kindName() + " a un elemento de tipo " + destino.kindName());
     }
 }
@@ -765,7 +918,8 @@ void TypeChecker::visit(BreakStmt* stm) {
 // return e: e debe tener el tipo de la función
 void TypeChecker::visit(ReturnStmt* stm) {
     Type t = stm->exp->accept(this);
-    if (!tipoDe(funcionActual->tipo).aceptaValor(t)) {
+    Type esperado = tipoDe(funcionActual->tipo);
+    if (!esperado.aceptaValor(t) && !(esperado.isPtr() && esNulo(stm->exp))) {
         error("la función " + funcionActual->nombre + " debe devolver "
               + funcionActual->tipo + ", pero return devuelve " + t.kindName());
     }
@@ -775,16 +929,14 @@ void TypeChecker::visit(ReturnStmt* stm) {
 
 // var tipo ids: tipo válido y sin variables repetidas
 void TypeChecker::visit(VarDec* dec) {
-    string base = dec->tipo.substr(0, dec->tipo.find_first_of("*<"));
-    if (base != "int" && base != "bool" && base != "stack") {
-        error("tipo desconocido: " + dec->tipo);
-    }
+    validarTipo(dec->tipo, "la declaración de variables");
+    Type t = tipoDe(dec->tipo);
     for (const string& v : dec->variables) {
         if (tipos.check(v)) {
             error("variable declarada dos veces: " + v);
         }
-        tipos.add_var(v, tipoDe(dec->tipo));
-        numVariables[funcionActual->nombre]++;      // una variable local más
+        tipos.add_var(v, t);
+        numVariables[funcionActual->nombre] += slotsDe(t);   // un struct ocupa varios slots
     }
 }
 
@@ -812,10 +964,23 @@ void TypeChecker::visit(FunDec* fun) {
     funcionActual = nullptr;
 }
 
-// Registra todas las funciones (para permitir recursión y llamadas a funciones
-// definidas más abajo) y luego verifica cada una
+// Registra los structs (en orden: un struct solo puede contener por valor a otro declarado antes),
+// luego todas las funciones (para permitir recursión y llamadas a funciones
+// definidas más abajo) y por último verifica cada una
 void TypeChecker::visit(Programa* program) {
+    for (StructDec* s : program->estructuras) registrarStruct(s);
     for (FunDec* f : program->funciones) {
+        validarTipo(f->tipo, "el retorno de " + f->nombre);
+        if (tipoDe(f->tipo).isStruct()) {
+            error("la función " + f->nombre + " no puede devolver un struct por valor (usa " + f->tipo + "*)");
+        }
+        for (size_t i = 0; i < f->parametros_tipos.size(); i++) {
+            validarTipo(f->parametros_tipos[i], "los parámetros de " + f->nombre);
+            if (tipoDe(f->parametros_tipos[i]).isStruct()) {
+                error("el parámetro " + f->parametros_id[i] + " de " + f->nombre
+                      + " no puede ser un struct por valor (usa " + f->parametros_tipos[i] + "*)");
+            }
+        }
         if (funciones.count(f->nombre)) {
             error("función declarada dos veces: " + f->nombre);
         }

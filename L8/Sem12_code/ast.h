@@ -127,6 +127,16 @@ public:
     ~AddrExp();
 };
 
+// Acceso a campo de struct: expr.campo
+class FieldAccessExp : public Exp {
+public:
+    Exp* objeto;
+    string campo;
+    FieldAccessExp(Exp* obj, const string& campo);
+    Type accept(Visitor* visitor) override;
+    ~FieldAccessExp();
+};
+
 // Memoria dinámica: malloc(bytes) reserva memoria en el heap y devuelve un void*
 class MallocExp : public Exp {
 public:
@@ -134,6 +144,15 @@ public:
     MallocExp(Exp* b);
     Type accept(Visitor* visitor) override;
     ~MallocExp();
+};
+
+// sizeof(tipo): devuelve el tamaño en bytes del tipo (8 para primitivos, N*8 para structs)
+class SizeofExp : public Exp {
+public:
+    string tipoNombre;
+    SizeofExp(const string& tipo);
+    Type accept(Visitor* visitor) override;
+    ~SizeofExp();
 };
 
 // Llamada a un método de pila: pila.push(valor) | pila.pop() | pila.top() | pila.empty() | pila.size()
@@ -265,6 +284,21 @@ public:
     void accept(Visitor* visitor);
 };
 
+// Campo de un struct: tipo + nombre
+struct StructField {
+    string tipo;
+    string nombre;
+};
+
+// Declaración de struct: struct Nombre var tipo campo1, campo2; ... endstruct
+class StructDec {
+public:
+    string nombre;
+    vector<StructField> campos;
+    StructDec();
+    ~StructDec();
+};
+
 // Cuerpo: primero las declaraciones y luego las sentencias
 class Body {
 public:
@@ -290,9 +324,10 @@ public:
 
 // ==================== Programa ====================
 
-// Raíz del AST: la lista de funciones del programa (una debe ser main)
+// Raíz del AST: la lista de structs y funciones del programa (una función debe ser main)
 class Programa {
 public:
+    vector<StructDec*> estructuras;
     vector<FunDec*> funciones;
     void accept(Visitor* visitor);
     ~Programa();

@@ -82,6 +82,20 @@ AddrExp::~AddrExp() {
     delete lvalue;
 }
 
+// Crea un acceso a campo de struct
+FieldAccessExp::FieldAccessExp(Exp* obj, const string& c) : objeto(obj), campo(c) {}
+
+// Libera el objeto
+FieldAccessExp::~FieldAccessExp() {
+    delete objeto;
+}
+
+// Crea un sizeof(tipo)
+SizeofExp::SizeofExp(const string& tipo) : tipoNombre(tipo) {}
+
+// Destructor de SizeofExp
+SizeofExp::~SizeofExp() {}
+
 // Crea un malloc(bytes)
 MallocExp::MallocExp(Exp* b) : bytes(b) {}
 
@@ -199,6 +213,12 @@ VarDec::VarDec() {}
 // Destructor de VarDec
 VarDec::~VarDec() {}
 
+// Crea un struct sin campos
+StructDec::StructDec() {}
+
+// Destructor de StructDec
+StructDec::~StructDec() {}
+
 // Crea un cuerpo vacío
 Body::Body() {}
 
@@ -235,7 +255,8 @@ FunDec::~FunDec() {
 // Crea un programa sin funciones
 Programa::Programa() {}
 
-// Libera todas las funciones
+// Libera todas las funciones y structs
 Programa::~Programa() {
+    for (StructDec* s : estructuras) delete s;
     for (FunDec* f : funciones) delete f;
 }

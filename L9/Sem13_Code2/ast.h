@@ -24,7 +24,9 @@ enum BinaryOp {
     GT_OP,
     GE_OP,
     EQ_OP,
-    NE_OP
+    NE_OP,
+    SPACESHIP_OP,   // a <=> b: -1 si a < b, 0 si a == b, 1 si a > b
+    ELVIS_OP        // a ?: b: a si a es distinto de 0; si no, b (b solo se evalúa en ese caso)
 };
 
 // Métodos del tipo stack

@@ -9,9 +9,23 @@
 #include "type.h"
 #include "environment.h"
 
+// Información de un campo dentro de un struct
+struct CampoInfo {
+    string tipo;
+    int offset;     // offset en bytes desde el inicio del struct
+};
+
+// Información de un struct completo
+struct StructInfo {
+    string nombre;
+    vector<pair<string, CampoInfo>> campos;   // nombre -> info, en orden
+    int tamSlots;    // cantidad total de slots de 8 bytes
+};
+
 class TypeChecker;
 
-// Tamaño de cada valor: int, bool, punteros y pilas ocupan 8 bytes (en la pila y en el heap)
+// Tamaño de cada valor: int, bool, punteros y pilas ocupan 8 bytes (en la pila y en el heap).
+// Un struct ocupa 8 bytes por cada slot de sus campos (los structs anidados van en línea)
 const int TAM_VARIABLE = 8;
 
 // Una variable stack guarda la dirección de una cabecera en el heap: [tope, tamaño].
@@ -35,6 +49,8 @@ public:
     virtual Type visit(AddrExp* exp) = 0;
     virtual Type visit(MallocExp* exp) = 0;
     virtual Type visit(StackOpExp* exp) = 0;
+    virtual Type visit(FieldAccessExp* exp) = 0;
+    virtual Type visit(SizeofExp* exp) = 0;
     // Sentencias
     virtual void visit(AssignStmt* stm) = 0;
     virtual void visit(StackStmt* stm) = 0;
@@ -85,6 +101,8 @@ public:
     Type visit(AddrExp* exp) override;
     Type visit(MallocExp* exp) override;
     Type visit(StackOpExp* exp) override;
+    Type visit(FieldAccessExp* exp) override;
+    Type visit(SizeofExp* exp) override;
     void visit(AssignStmt* stm) override;
     void visit(StackStmt* stm) override;
     void visit(StoreStmt* stm) override;
@@ -103,6 +121,7 @@ public:
 private:
     Type direccion(Exp* lvalue);             // deja en %rax la dirección de x, a[i] o *p
     void llamar(const string& funcion);      // call con la pila alineada a 16 bytes
+    int tamTipo(const Type& t);              // bytes que ocupa un valor del tipo (struct: N * 8)
 };
 
 
@@ -110,6 +129,7 @@ class TypeChecker : public Visitor {
 public:
     Environment<Type> tipos;                  // tipo declarado de cada variable / parámetro
     unordered_map<string, FunDec*> funciones; // firma de cada función, por nombre
+    unordered_map<string, StructInfo> structs; // definiciones de structs, por nombre
     FunDec* funcionActual = nullptr;          // función que se está verificando
     int bucles = 0;                           // cantidad de bucles abiertos (para break)
 
@@ -130,6 +150,8 @@ public:
     Type visit(AddrExp* exp) override;
     Type visit(MallocExp* exp) override;
     Type visit(StackOpExp* exp) override;
+    Type visit(FieldAccessExp* exp) override;
+    Type visit(SizeofExp* exp) override;
     void visit(AssignStmt* stm) override;
     void visit(StackStmt* stm) override;
     void visit(StoreStmt* stm) override;
@@ -147,6 +169,12 @@ public:
 
 private:
     void esperarBool(Exp* condicion, const string& donde);
+    void validarTipo(const string& nombre, const string& donde);  // el tipo existe (structs incluidos)
+    void registrarStruct(StructDec* s);       // calcula offsets y tamaño de cada campo
+
+public:
+    int slotsDe(const Type& t) const;         // slots de 8 bytes que ocupa un valor del tipo
+    const CampoInfo* campo(const string& structNombre, const string& campo) const;
 };
 
 #endif // VISITOR_H

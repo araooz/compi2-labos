@@ -25,6 +25,8 @@ public:
     Stmt* parseStmt();
     list<Stmt*> parseStmtList();
     Exp* parseCExp();
+    Exp* parseRExp();
+    Exp* parseSExp();
     Exp* parseBExp();
     Exp* parseExpr();
     Exp* parseTerm();
